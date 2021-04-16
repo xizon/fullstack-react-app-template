@@ -1,7 +1,7 @@
 # Uix Create React App
 
 
-[![Travis CI](https://img.shields.io/travis/xizon/uix-create-react-app/master?style=for-the-badge)](https://travis-ci.org/xizon/uix-create-react-app/)
+[![Travis CI](https://img.shields.io/travis/com/xizon/uix-create-react-app?style=for-the-badge)](https://travis-ci.com/xizon/uix-create-react-app/)
 [![npm version](https://img.shields.io/npm/v/uix-create-react-app?style=for-the-badge)](https://www.npmjs.com/package/uix-create-react-app)
 [![license](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=for-the-badge)](LICENSE)
 
