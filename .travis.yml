@@ -4,10 +4,15 @@
 language: node_js
 
 node_js:
-  - 14
+  - 10
   
-# Use README.md command `npm install --only=dev --unsafe-perm --production`, don't use `npm ci`
+before_install:
+  - npm install rimraf -g
+  - rimraf node_modules
+  - npm config set package-lock false
+  - npm cache clean --force
 
-script:
-  - npm install
-  - npm view build
+
+script: 
+ - npm install --dev
+ - npm view build
