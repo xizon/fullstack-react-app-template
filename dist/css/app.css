@@ -1,0 +1,25 @@
+/*!
+ * 
+ * ## Project Name        :  Uix Create React App
+ * ## Version             :  0.0.1
+ * ## Based on            :  Uix Create React App (https://github.com/xizon/uix-create-react-app)
+ * ## Last Update         :  April 16, 2021
+ * ## Created by          :  UIUX Lab (https://uiux.cc)
+ * ## Contact Us          :  uiuxlab@gmail.com
+ * ## Released under the GPL 3 license.
+ * 	
+ */
+button {
+  border: 0;
+  margin: 5px;
+  border-radius: 3px;
+  padding: 5px 15px;
+}
+
+button:hover {
+  filter: Invert();
+}
+
+
+/*# sourceMappingURL=app.css.map*/
+/*# sourceMappingURL=app.css.map*/
