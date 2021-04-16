@@ -4,10 +4,10 @@
 language: node_js
 
 node_js:
-  - 10
+  - 14
   
 # Use README.md command `npm install --only=dev --unsafe-perm --production`, don't use `npm ci`
 
 script:
-  - npm install --dev
+  - npm install
   - npm view build
