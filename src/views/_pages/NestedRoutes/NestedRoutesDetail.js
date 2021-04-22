@@ -1,4 +1,4 @@
-import React, { Component, Fragment } from 'react';
+import React, { Component } from 'react';
 import {
 	useParams,
 	useLocation
@@ -47,12 +47,12 @@ class NestedRoutesDetail extends Component {
   render() {
 	
 	return (
-		<Fragment>
+		<>
 		
 		    <HookScript />
 		
 			<p>Detail topicId: <span style={{background:"yellow",padding:"5px"}}><HookTopicId /></span></p>
-		</Fragment>
+		</>
 	)  
 	  
 	  

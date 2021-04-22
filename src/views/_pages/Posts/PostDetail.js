@@ -1,4 +1,4 @@
-import React, { Component, Fragment } from 'react';
+import React, { Component } from 'react';
 import axios from 'axios';
 
 class PostDetail extends Component {
@@ -103,7 +103,7 @@ class PostDetail extends Component {
 	const { isLoading, postDetailData, error } = this.state;
 	
 	return (
-	  <Fragment>
+	  <>
 
 			<div className="content">
 
@@ -134,7 +134,7 @@ class PostDetail extends Component {
 			</div>
 
 
-	  </Fragment>
+	  </>
 
 	);
     

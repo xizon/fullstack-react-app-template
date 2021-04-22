@@ -1,4 +1,4 @@
-import React, { Component, Fragment } from 'react';
+import React, { Component } from 'react';
 import axios from 'axios';
 import PostItem from '@react.app/pages/Posts/PostItem.js';
 
@@ -100,7 +100,7 @@ class Posts extends Component {
 	const { isLoading, postsData, error } = this.state;
 	
 	return (
-	  <Fragment>
+	  <>
 
 			<div className="content">
 			    { !isLoading ? (
@@ -116,7 +116,7 @@ class Posts extends Component {
 			</div>
 
 
-	  </Fragment>
+	  </>
 
 	);
     

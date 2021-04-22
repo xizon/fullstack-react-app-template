@@ -1,9 +1,9 @@
 /*!
  * 
  * ## Project Name        :  Uix Create React App
- * ## Version             :  0.0.1
+ * ## Version             :  0.0.2
  * ## Based on            :  Uix Create React App (https://github.com/xizon/uix-create-react-app)
- * ## Last Update         :  April 16, 2021
+ * ## Last Update         :  April 22, 2021
  * ## Created by          :  UIUX Lab (https://uiux.cc)
  * ## Contact Us          :  uiuxlab@gmail.com
  * ## Released under the GPL 3 license.
@@ -74,7 +74,7 @@
 /******/
 /******/ 	var hotApplyOnUpdate = true;
 /******/ 	// eslint-disable-next-line no-unused-vars
-/******/ 	var hotCurrentHash = "65f6c2e4c952caffbd3c";
+/******/ 	var hotCurrentHash = "d439de7698356336d7a6";
 /******/ 	var hotRequestTimeout = 10000;
 /******/ 	var hotCurrentModuleData = {};
 /******/ 	var hotCurrentChildModule;
@@ -6359,7 +6359,7 @@ function renderRoutes(routes, extraProps, switchProps) {
     document.head.appendChild($style);
     $style.innerHTML = "\n            #webtitle {\n\t\t\t\tmargin: 10px 90px;\n\t\t\t}\n            #loading {\n\t\t\t\tmargin: 10px 90px;\n\t\t\t}\n\n\t\t\tnav {\n\t\t\t\tdisplay: block;\n\t\t\t\tmargin-bottom: 50px;\n\t\t\t}\n\n\t\t\tnav ul {\n\t\t\t\tlist-style: none;\n\t\t\t}\n\n\t\t\tnav li {\n\t\t\t\tfloat: left;\n\t\t\t\tpadding: 1rem 2rem;\n\t\t\t}\n\n\t\t\tnav li a {\n\t\t\t\tcolor: #2075EF;\n\t\t\t\ttext-decoration: none;\n\t\t\t\tfont-size: 16px;\n\t\t\t\ttext-transform: uppercase;\n\t\t\t\tborder: 1px solid rgba(0, 0, 0, 0);\n\t\t\t\tpadding: 0.5rem 1rem;\n\t\t\t}\n\n\t\t\tnav li.active a {\n\t\t\t\tbackground: #F7F6F0;\n\t\t\t\tborder: 1px solid #EFE4E5;\n\t\t\t\tpadding: 0.5rem 1rem;\n\t\t\t}\n\n\t\t\tnav::after {\n\t\t\t\tcontent: \"\";\n\t\t\t\tdisplay: block;\n\t\t\t\tclear: both;\n\t\t\t}\n\n\t\t\t.content {\n\t\t\t\tdisplay: block;\n\t\t\t\tpadding: 15px;\n\t\t\t\tbackground: #F7F6F0;\n\t\t\t\tborder: 1px solid #EFE4E5;\n\t\t\t\tbox-shadow: 0px 10px 5px -12px rgb(0 0 0 / 21%);\n\t\t\t\tmargin: 10px 70px;\n\t\t\t\tborder-radius: 15px;\n\t\t\t}";
   });
-  return /*#__PURE__*/react_default.a.createElement(react["Fragment"], null, /*#__PURE__*/react_default.a.createElement(react_router_dom_HashRouter, null, /*#__PURE__*/react_default.a.createElement("h1", {
+  return /*#__PURE__*/react_default.a.createElement(react_default.a.Fragment, null, /*#__PURE__*/react_default.a.createElement(react_router_dom_HashRouter, null, /*#__PURE__*/react_default.a.createElement("h1", {
     id: "webtitle"
   }, "Uix Create React App"), /*#__PURE__*/react_default.a.createElement("nav", null, /*#__PURE__*/react_default.a.createElement("ul", null, /*#__PURE__*/react_default.a.createElement("li", {
     className: props.location.hash === '#/index' || props.location.hash === '#/' ? 'active' : ''
@@ -6459,7 +6459,7 @@ var Buttons_Button = /*#__PURE__*/function (_React$Component) {
   _createClass(Button, [{
     key: "render",
     value: function render() {
-      return /*#__PURE__*/react_default.a.createElement(react["Fragment"], null, /*#__PURE__*/react_default.a.createElement("button", {
+      return /*#__PURE__*/react_default.a.createElement(react_default.a.Fragment, null, /*#__PURE__*/react_default.a.createElement("button", {
         type: "button",
         style: Buttons_styles[this.props.bgColor] || Buttons_styles['info']
       }, this.props.btnName || 'Default'));
@@ -6481,7 +6481,7 @@ var spreadOperator = {
   var _ref$staticContext = _ref.staticContext,
       staticContext = _ref$staticContext === void 0 ? {} : _ref$staticContext;
   staticContext.status = 200;
-  return /*#__PURE__*/react_default.a.createElement(react["Fragment"], null, /*#__PURE__*/react_default.a.createElement("div", {
+  return /*#__PURE__*/react_default.a.createElement(react_default.a.Fragment, null, /*#__PURE__*/react_default.a.createElement("div", {
     className: "content"
   }, /*#__PURE__*/react_default.a.createElement("h1", null, "Home!"), /*#__PURE__*/react_default.a.createElement("h3", null, "Component Import:"), /*#__PURE__*/react_default.a.createElement(Buttons_Button, {
     bgColor: "",
@@ -6510,7 +6510,7 @@ var axios_default = /*#__PURE__*/__webpack_require__.n(axios);
 /* harmony default export */ var PostItem = (function (_ref) {
   var name = _ref.name,
       flag = _ref.flag;
-  return /*#__PURE__*/react_default.a.createElement(react["Fragment"], null, /*#__PURE__*/react_default.a.createElement("div", {
+  return /*#__PURE__*/react_default.a.createElement(react_default.a.Fragment, null, /*#__PURE__*/react_default.a.createElement("div", {
     style: {
       padding: "10px 10px 0 10px",
       margin: "10px",
@@ -6665,7 +6665,7 @@ var Posts_Posts = /*#__PURE__*/function (_Component) {
           isLoading = _this$state.isLoading,
           postsData = _this$state.postsData,
           error = _this$state.error;
-      return /*#__PURE__*/react_default.a.createElement(react["Fragment"], null, /*#__PURE__*/react_default.a.createElement("div", {
+      return /*#__PURE__*/react_default.a.createElement(react_default.a.Fragment, null, /*#__PURE__*/react_default.a.createElement("div", {
         className: "content"
       }, !isLoading ? postsData != null ? postsData.map(function (item, i) {
         return /*#__PURE__*/react_default.a.createElement(PostItem, Posts_extends({
@@ -6797,7 +6797,7 @@ var PostDetail_PostDetail = /*#__PURE__*/function (_Component) {
           isLoading = _this$state.isLoading,
           postDetailData = _this$state.postDetailData,
           error = _this$state.error;
-      return /*#__PURE__*/react_default.a.createElement(react["Fragment"], null, /*#__PURE__*/react_default.a.createElement("div", {
+      return /*#__PURE__*/react_default.a.createElement(react_default.a.Fragment, null, /*#__PURE__*/react_default.a.createElement("div", {
         className: "content"
       }, !isLoading ? postDetailData != null ? postDetailData.map(function (item, i) {
         return /*#__PURE__*/react_default.a.createElement("div", {
@@ -7030,7 +7030,7 @@ var LoginPage_LoginPage = /*#__PURE__*/function (_Component) {
     value: function render() {
       // NOTE: I use data-attributes for easier E2E testing
       // but you don't need to target those (any css-selector will work)
-      return /*#__PURE__*/react_default.a.createElement(react["Fragment"], null, this.state.user ? /*#__PURE__*/react_default.a.createElement(LoginPage_Welcome, {
+      return /*#__PURE__*/react_default.a.createElement(react_default.a.Fragment, null, this.state.user ? /*#__PURE__*/react_default.a.createElement(LoginPage_Welcome, {
         user: this.state.user,
         onSignOut: this.signOut.bind(this)
       }) : /*#__PURE__*/react_default.a.createElement("div", {
@@ -7157,7 +7157,7 @@ var Todos_Todos = /*#__PURE__*/function (_Component) {
   }, {
     key: "render",
     value: function render() {
-      return /*#__PURE__*/react_default.a.createElement(react["Fragment"], null, /*#__PURE__*/react_default.a.createElement("div", {
+      return /*#__PURE__*/react_default.a.createElement(react_default.a.Fragment, null, /*#__PURE__*/react_default.a.createElement("div", {
         className: "content"
       }, /*#__PURE__*/react_default.a.createElement(Todos_LoginPage, null)));
     }
@@ -7235,7 +7235,7 @@ var NestedRoutesDetail_NestedRoutesDetail = /*#__PURE__*/function (_Component) {
   NestedRoutesDetail_createClass(NestedRoutesDetail, [{
     key: "render",
     value: function render() {
-      return /*#__PURE__*/react_default.a.createElement(react["Fragment"], null, /*#__PURE__*/react_default.a.createElement(HookScript, null), /*#__PURE__*/react_default.a.createElement("p", null, "Detail topicId: ", /*#__PURE__*/react_default.a.createElement("span", {
+      return /*#__PURE__*/react_default.a.createElement(react_default.a.Fragment, null, /*#__PURE__*/react_default.a.createElement(HookScript, null), /*#__PURE__*/react_default.a.createElement("p", null, "Detail topicId: ", /*#__PURE__*/react_default.a.createElement("span", {
         style: {
           background: "yellow",
           padding: "5px"
@@ -7283,7 +7283,7 @@ function HookContent() {
       path = _useRouteMatch.path,
       url = _useRouteMatch.url;
 
-  return /*#__PURE__*/react_default.a.createElement(react["Fragment"], null, /*#__PURE__*/react_default.a.createElement("h3", null, "Nested Routes Page"), /*#__PURE__*/react_default.a.createElement("div", null, /*#__PURE__*/react_default.a.createElement(Link, {
+  return /*#__PURE__*/react_default.a.createElement(react_default.a.Fragment, null, /*#__PURE__*/react_default.a.createElement("h3", null, "Nested Routes Page"), /*#__PURE__*/react_default.a.createElement("div", null, /*#__PURE__*/react_default.a.createElement(Link, {
     to: "".concat(url, "/topic-one")
   }, "> click here to display Topic One")), /*#__PURE__*/react_default.a.createElement("div", null, /*#__PURE__*/react_default.a.createElement(Link, {
     to: "".concat(url, "/topic-two")
@@ -7311,7 +7311,7 @@ var NestedRoutes_NestedRoutes = /*#__PURE__*/function (_Component) {
   NestedRoutes_createClass(NestedRoutes, [{
     key: "render",
     value: function render() {
-      return /*#__PURE__*/react_default.a.createElement(react["Fragment"], null, /*#__PURE__*/react_default.a.createElement("div", {
+      return /*#__PURE__*/react_default.a.createElement(react_default.a.Fragment, null, /*#__PURE__*/react_default.a.createElement("div", {
         className: "content"
       }, /*#__PURE__*/react_default.a.createElement(HookContent, null)));
     }
@@ -7327,7 +7327,7 @@ var NestedRoutes_NestedRoutes = /*#__PURE__*/function (_Component) {
   var _ref$staticContext = _ref.staticContext,
       staticContext = _ref$staticContext === void 0 ? {} : _ref$staticContext;
   staticContext.status = 404;
-  return /*#__PURE__*/react_default.a.createElement(react["Fragment"], null, /*#__PURE__*/react_default.a.createElement("div", {
+  return /*#__PURE__*/react_default.a.createElement(react_default.a.Fragment, null, /*#__PURE__*/react_default.a.createElement("div", {
     className: "content"
   }, /*#__PURE__*/react_default.a.createElement("h3", null, "404 - Not found")));
 });

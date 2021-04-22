@@ -1,4 +1,4 @@
-import React, { Fragment } from 'react';
+import React from 'react';
 import Button from '@react.app/components/Buttons';
 
 
@@ -13,7 +13,7 @@ export default ({ staticContext = {} }) => {
     staticContext.status = 200;
     
     return (
-	  <Fragment>
+	  <>
 		
             <div className="content">
                 <h1>Home!</h1>
@@ -30,6 +30,6 @@ export default ({ staticContext = {} }) => {
             </div>
        
         
-      </Fragment>
+      </>
     );
 };

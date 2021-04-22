@@ -1,4 +1,4 @@
-import React, { Fragment } from 'react';
+import React from 'react';
 import {
 	HashRouter,
 	Route, 
@@ -78,7 +78,7 @@ export default (props) => {
 	
 	
     return (
-	  <Fragment>
+	  <>
 		
 		<HashRouter>
 		
@@ -156,7 +156,7 @@ export default (props) => {
 
        </HashRouter>
 
-      </Fragment>
+      </>
     );
 
 };

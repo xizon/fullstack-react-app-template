@@ -1,4 +1,4 @@
-import React, { Component, Fragment } from 'react';
+import React, { Component } from 'react';
 import {
 	Route, 
 	Switch, 
@@ -21,7 +21,7 @@ function HookContent() {
 
 	
 	return (
-		<Fragment>
+		<>
 		
 			<h3>Nested Routes Page</h3>
 
@@ -41,7 +41,7 @@ function HookContent() {
 				  <NestedRoutesDetail />
 				</Route>
 			  </Switch>
-		</Fragment>
+		</>
 	)
 
 }
@@ -52,7 +52,7 @@ class NestedRoutes extends Component {
   render() {
 	  
     return (
-	  <Fragment>
+	  <>
 
 		{/*
 		<!-- Content   
@@ -65,7 +65,7 @@ class NestedRoutes extends Component {
 		</div>
 
 
-      </Fragment>
+      </>
     );
 	  
   }

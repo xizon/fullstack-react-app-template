@@ -8,7 +8,7 @@
 ## Examples
 
 ```js
-import React, { Fragment } from 'react';
+import React from 'react';
 import Button from '@react.app/components/Buttons';
 
 let spreadOperator = {
@@ -17,16 +17,16 @@ let spreadOperator = {
 };
 
 
-export default function ButtonsExamples() {
+export default function Examples() {
   return (
-    <Fragment>
+    <>
 		<Button bgColor='' btnName=''/>
 		<Button bgColor='success' btnName='success'/>
 		<Button bgColor='info' btnName='info'/>
 		<Button bgColor='danger' btnName='danger'/>
 		<Button bgColor='warning' btnName='warning'/>
 		<Button {...spreadOperator}/>
-    </Fragment>
+    </>
   );
 }
 

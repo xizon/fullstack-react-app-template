@@ -1,4 +1,4 @@
-import React, { Component, Fragment } from 'react';
+import React, { Component } from 'react';
 import LoginPage from '@react.app/pages/Todos/LoginPage.js';
 
 
@@ -33,14 +33,14 @@ class Todos extends Component {
   render() {
 
     return (
-	  <Fragment>
+	  <>
 		
             <div className="content">
                <LoginPage />
             </div>
        
           
-      </Fragment>
+      </>
 
     );
   }

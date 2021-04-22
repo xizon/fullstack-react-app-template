@@ -1,10 +1,10 @@
-import React, { Fragment } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 
 export default ({ name, flag })  => {
     
     return (
-	  <Fragment>
+	  <>
 		
           <div style={{padding: "10px 10px 0 10px", margin: "10px", display: "inline-block", border: "1px solid #ddd", width: "120px", height: "120px", textAlign: "center", position: "relative"}}>
             <Link to={`/posts/${name}`} className="item">
@@ -14,7 +14,7 @@ export default ({ name, flag })  => {
 
           </div>
           
-      </Fragment>
+      </>
 
     );
 };

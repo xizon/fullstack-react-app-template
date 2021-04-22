@@ -1,4 +1,4 @@
-import React, { Fragment } from 'react';
+import React from 'react';
 
 import '@react.app/components/Buttons/styles/index.scss';
 
@@ -30,11 +30,11 @@ export default class Button extends React.Component {
 	}
 	render() {
 		return (
-		  <Fragment>
+		  <>
 			  <button type='button' style={styles[this.props.bgColor] || styles['info']}>
 				{this.props.btnName || 'Default'}
 			  </button>
-		  </Fragment>
+		  </>
 		)
 	}
 }
