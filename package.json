@@ -1,4 +1,5 @@
 {
+  "development": true,
   "author": "UIUX Lab",
   "name": "uix-create-react-app",
   "version": "0.0.2",

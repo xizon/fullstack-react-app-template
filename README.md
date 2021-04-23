@@ -26,7 +26,7 @@
 
 ## Description
 
-🏹 A set of React tool and scaffold. 🏹
+A set of React tool and scaffold. 
 
 **Access your application without a server.**
 
@@ -152,5 +152,4 @@ Finding bugs, sending pull requests or improving our docs - any contribution is 
 ## Licensing
 
 Licensed under the [MIT](https://opensource.org/licenses/MIT).
-
 
