@@ -2,7 +2,7 @@
   "development": true,
   "author": "UIUX Lab",
   "name": "uix-create-react-app",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "A set of React tool and scaffold.",
   "main": "webpack.config.js",
   "directories": {

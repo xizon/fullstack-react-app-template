@@ -1,9 +1,9 @@
 /*!
  * 
  * ## Project Name        :  Uix Create React App
- * ## Version             :  0.0.2
+ * ## Version             :  0.0.3
  * ## Based on            :  Uix Create React App (https://github.com/xizon/uix-create-react-app)
- * ## Last Update         :  April 22, 2021
+ * ## Last Update         :  April 25, 2021
  * ## Created by          :  UIUX Lab (https://uiux.cc)
  * ## Contact Us          :  uiuxlab@gmail.com
  * ## Released under the GPL 3 license.
