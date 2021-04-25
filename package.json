@@ -10,8 +10,7 @@
   },
   "scripts": {
     "watch": "webpack --watch",
-    "dev": "webpack --mode development",
-    "build": "webpack --mode production",
+    "build": "webpack --progress --mode production",
     "prettier": "prettier \"./dist/css/app.css\""
   },
   "repository": {
