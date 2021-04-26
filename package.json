@@ -1,6 +1,7 @@
 {
   "development": true,
   "author": "UIUX Lab",
+  "email": "uiuxlab@gmail.com",
   "name": "uix-create-react-app",
   "projectName": "Uix Create React App",
   "createdInfo": "UIUX Lab (https://uiux.cc)",
