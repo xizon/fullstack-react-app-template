@@ -79,7 +79,7 @@ http://localhost:8080/examples/
 ```
 
 
-### Note:
+### ⚙️ Note:
  
 **a) ERROR: npm update check failed.**
 
@@ -93,6 +93,57 @@ $ sudo chown -R $USER:$(id -gn $USER) /Users/{username}/.config
 $ sudo npm install
 $ sudo npm rebuild node-sass
 ```
+
+
+### ⚙️ Site Info Configurations:
+
+You can update the Placeholders in Templates by modifying the Site Info configuration of `package.json`. Like this:
+
+```json
+{
+  "author": "UIUX Lab",
+  "name": "uix-create-react-app",
+  "email": "uiuxlab@gmail.com",
+  "version": "1.0.0",
+  "projectName": "Uix Create React App",
+  "createdInfo": "UIUX Lab (https://uiux.cc)",
+  "projectURL": "https://uiux.cc",
+  "description": "A set of React tool and scaffold.",
+  ...
+}
+```
+
+
+
+### ⚙️ Run the Webpack build in "development" mode:
+
+Add the `development` key and set it value to `true` to `package.json`.
+
+```json
+{
+  "development": true,
+  ...
+}
+```
+
+Then, you could use the following JavaScript code to debug it:
+
+```js
+if ( process.env.npm_package_development == 'true' ) {
+
+	YourComponentName.propTypes = {
+	    displayEnable: PropTypes.bool.isRequired,
+		htmlString: PropTypes.string.isRequired
+	}
+	
+}
+```
+
+
+### ⚙️ Custom import third-party library:
+
+The application loads some third-party libraries (icons, animations, 3D engines, etc.) by default, you can load them as needed, or modify the configuration file. Access to `src/client/components/_third-party-plugins/`
+
 
 
 

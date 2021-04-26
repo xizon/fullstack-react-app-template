@@ -73,19 +73,22 @@ const alias = {
 
 let customWebsiteVersion     = json.version,
 	customWebsiteAuthor      = ( Object.prototype.toString.call( json.author ) == '[object Object]' ) ? json.author.name : json.author,
-	customWebsiteTitle       = 'Uix Create React App',
-	customWebsiteDesc        = 'A set of React tool and scaffold.',
-	customWebsiteCanonical   = '<link rel="canonical" href="https://uiux.cc" />',
+	customWebsiteTitle       = json.projectName,
+	customWebsiteDesc        = json.description,
 	customWebsiteGenerator   = 'Uix Create React App',
 	customWebsiteHash        = randomString({length: 20}),
 	customWebsiteComment     = `
+DO NOT OVERRIDE THIS FILE.
+Generated with "npm run build"
+
 ## Project Name        :  ` + customWebsiteTitle + `
+## Project Description :  ` + customWebsiteDesc + `
+## Project URL         :  ` + json.projectURL + `
 ## Version             :  ` + customWebsiteVersion + `
-## Based on            :  Uix Create React App (https://github.com/xizon/uix-create-react-app)
+## Based on            :  Uix Create React App (` + json.homepage + `)
 ## Last Update         :  ` + moment().format( "MMMM D, YYYY" ) + `
-## Created by          :  UIUX Lab (https://uiux.cc)
-## Contact Us          :  uiuxlab@gmail.com
-## Released under the GPL 3 license.
+## Created by          :  ` + json.createdInfo + ( json.email != '' ? ' (' + json.email + ')' : '' ) + `
+## Released under the ` + json.license + ` license.
 	`;
 
 
@@ -145,7 +148,6 @@ class ReplacePlaceholderForFile {
 					if ( data.length > 0 && data.indexOf( '</html>' ) >= 0 ) {
 						data = data.replace(/\@\@\{website_title\}/g, customWebsiteTitle )
 									.replace(/\@\@\{website_desc\}/g, customWebsiteDesc )
-									.replace(/\@\@\{website_canonical\}/g, customWebsiteCanonical )
 									.replace(/\@\@\{website_author\}/g, customWebsiteAuthor )
 									.replace(/\@\@\{website_generator\}/g, customWebsiteGenerator )
 									.replace(/\@\@\{website_version\}/g, customWebsiteVersion )
@@ -342,16 +344,15 @@ const webpackConfig = {
 					 
 					 //fonts
 					 if ( resourcePath.indexOf( 'webfonts/' ) >= 0 || resourcePath.indexOf( 'fonts/' ) >= 0 ) {
-						 return '/' + globs.dist + '/fonts/' + url;
+						 return `../${globs.dist}/fonts/${url}`;
 					 }
 					  
 					 //imags
 					 if ( resourcePath.indexOf( 'images/' ) >= 0 || resourcePath.indexOf( 'img/' ) >= 0 ) {
-						 return '/' + globs.dist + '/images/' + url;
+						  return `../${globs.dist}/images/${url}`;
 					 } 
 					  
-						 
-					 return '/' + globs.dist + '/misc/' + url;
+					 return `../${globs.dist}/misc/${url}`;	 
 					  
 					
 				  }
