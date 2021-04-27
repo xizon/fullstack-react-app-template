@@ -97,13 +97,13 @@ class Posts extends Component {
 
   render() {
 	  
-	const { isLoading, postsData, error } = this.state;
+	const { isLoaded, postsData, error } = this.state;
 	
 	return (
 	  <>
 
 			<div className="content">
-			    { !isLoading ? (
+			    { isLoaded ? (
 			
 					( postsData != null ) ? postsData.map((item, i) => 
 					    <PostItem key={i} {...item} />

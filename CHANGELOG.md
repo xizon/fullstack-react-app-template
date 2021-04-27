@@ -1,7 +1,8 @@
 # Changelog
 
-#### = 0.0.4 (April 26, 2021) =
+#### = 0.0.5 (April 27, 2021) =
 
+* Fix: Fixed the problem of asynchronous loader display.
 * Tweak: Detail optimization.
 * Tweak: Refine the README documents.
 

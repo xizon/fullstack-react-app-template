@@ -6,10 +6,10 @@
  * ## Project Name        :  Uix Create React App
  * ## Project Description :  A set of React tool and scaffold.
  * ## Project URL         :  https://uiux.cc
- * ## Version             :  0.0.4
+ * ## Version             :  0.0.5
  * ## Based on            :  Uix Create React App (https://github.com/xizon/uix-create-react-app#readme)
- * ## Last Update         :  April 26, 2021
- * ## Created by          :  UIUX Lab (https://uiux.cc) (undefined)
+ * ## Last Update         :  April 27, 2021
+ * ## Created by          :  UIUX Lab (https://uiux.cc) (uiuxlab@gmail.com)
  * ## Released under the MIT license.
  * 	
  */
@@ -78,7 +78,7 @@
 /******/
 /******/ 	var hotApplyOnUpdate = true;
 /******/ 	// eslint-disable-next-line no-unused-vars
-/******/ 	var hotCurrentHash = "d439de7698356336d7a6";
+/******/ 	var hotCurrentHash = "b827b77147774526e37e";
 /******/ 	var hotRequestTimeout = 10000;
 /******/ 	var hotCurrentModuleData = {};
 /******/ 	var hotCurrentChildModule;
@@ -6666,12 +6666,12 @@ var Posts_Posts = /*#__PURE__*/function (_Component) {
     key: "render",
     value: function render() {
       var _this$state = this.state,
-          isLoading = _this$state.isLoading,
+          isLoaded = _this$state.isLoaded,
           postsData = _this$state.postsData,
           error = _this$state.error;
       return /*#__PURE__*/react_default.a.createElement(react_default.a.Fragment, null, /*#__PURE__*/react_default.a.createElement("div", {
         className: "content"
-      }, !isLoading ? postsData != null ? postsData.map(function (item, i) {
+      }, isLoaded ? postsData != null ? postsData.map(function (item, i) {
         return /*#__PURE__*/react_default.a.createElement(PostItem, Posts_extends({
           key: i
         }, item));
@@ -6798,12 +6798,12 @@ var PostDetail_PostDetail = /*#__PURE__*/function (_Component) {
     key: "render",
     value: function render() {
       var _this$state = this.state,
-          isLoading = _this$state.isLoading,
+          isLoaded = _this$state.isLoaded,
           postDetailData = _this$state.postDetailData,
           error = _this$state.error;
       return /*#__PURE__*/react_default.a.createElement(react_default.a.Fragment, null, /*#__PURE__*/react_default.a.createElement("div", {
         className: "content"
-      }, !isLoading ? postDetailData != null ? postDetailData.map(function (item, i) {
+      }, isLoaded ? postDetailData != null ? postDetailData.map(function (item, i) {
         return /*#__PURE__*/react_default.a.createElement("div", {
           key: "detail" + i,
           style: {

@@ -100,14 +100,14 @@ class PostDetail extends Component {
 	
   render() {
 	  
-	const { isLoading, postDetailData, error } = this.state;
+	const { isLoaded, postDetailData, error } = this.state;
 	
 	return (
 	  <>
 
 			<div className="content">
 
-			    { !isLoading ? (
+			    { isLoaded ? (
 		
 					( postDetailData != null ) ? postDetailData.map((item, i) => 
 
