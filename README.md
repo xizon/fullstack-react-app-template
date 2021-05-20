@@ -79,6 +79,14 @@ http://localhost:8080/examples/
 ```
 
 
+**Step 6 (Optional).** Run the following command to test:
+
+```sh
+$ npm run dev
+```
+
+
+
 ### ⚙️ Note:
  
 **a) ERROR: npm update check failed.**
@@ -117,19 +125,16 @@ You can update the Placeholders in Templates by modifying the Site Info configur
 
 ### ⚙️ Run the Webpack build in "development" mode:
 
-Add the `development` key and set it value to `true` to `package.json`.
+Run the following command to test:
 
-```json
-{
-  "development": true,
-  ...
-}
+```sh
+$ npm run dev
 ```
 
 Then, you could use the following JavaScript code to debug it:
 
 ```js
-if ( process.env.npm_package_development == 'true' ) {
+if ( process.env.NODE_ENV === 'development' ) {
 
 	YourComponentName.propTypes = {
 	    displayEnable: PropTypes.bool.isRequired,

@@ -2,7 +2,7 @@
 
 ![MIT license](https://badgen.now.sh/badge/license/MIT)
 
-[Source](https://github.com/xizon/react-app-starter/tree/master/src/components/Buttons)
+[Source](https://github.com/xizon/uix-create-react-app/tree/main/src/components/Buttons)
 
 
 ## Examples
@@ -17,7 +17,7 @@ let spreadOperator = {
 };
 
 
-export default function Examples() {
+export default () => {
   return (
     <>
 		<Button bgColor='' btnName=''/>

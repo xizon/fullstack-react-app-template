@@ -1,5 +1,10 @@
 # Changelog
 
+#### = 0.0.6 (May 20, 2021) =
+
+* Tweak: Modified global environment variables during testing.
+
+
 #### = 0.0.5 (April 27, 2021) =
 
 * Fix: Fixed the problem of asynchronous loader display.

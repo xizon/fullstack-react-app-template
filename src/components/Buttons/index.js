@@ -40,4 +40,8 @@ export default class Button extends React.Component {
 }
 
 
-
+//Configure your application to run in "development" mode.
+if ( process.env.NODE_ENV === 'development' ) {
+	//do something.
+	
+}
