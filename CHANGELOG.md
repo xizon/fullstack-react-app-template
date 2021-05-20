@@ -1,6 +1,6 @@
 # Changelog
 
-#### = 0.0.6 (May 20, 2021) =
+#### = 0.0.7 (May 20, 2021) =
 
 * Tweak: Modified global environment variables during testing.
 

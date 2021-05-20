@@ -279,7 +279,7 @@ const webpackConfig = {
 					[
 						// fallback to style-loader in development
 						{
-							loader: process.env.NODE_ENV !== 'production' ? 'style-loader' : MiniCssExtractPlugin.loader, //Extracts CSS into separate files  ( Step 3 )
+							loader: MiniCssExtractPlugin.loader, //Extracts CSS into separate files  ( Step 3 ) 
 							options: {
 								// you can specify a publicPath here
 								// by default it use publicPath in webpackOptions.output

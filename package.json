@@ -5,7 +5,7 @@
   "projectName": "Uix Create React App",
   "createdInfo": "UIUX Lab (https://uiux.cc)",
   "projectURL": "https://uiux.cc",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "A set of React tool and scaffold.",
   "main": "webpack.config.js",
   "directories": {
@@ -13,8 +13,8 @@
   },
   "scripts": {
     "watch": "webpack --watch",
-    "build": "webpack --progress --mode production",
-    "dev": "webpack --progress --mode development",
+    "build": "cross-env NODE_ENV=production webpack --progress --mode production",
+    "dev": "cross-env NODE_ENV=development webpack --progress --mode development",
     "prettier": "prettier \"./dist/css/app.css\""
   },
   "repository": {
