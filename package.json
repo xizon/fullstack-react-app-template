@@ -9,7 +9,8 @@
   "description": "A set of React tool and scaffold.",
   "main": "webpack.config.js",
   "directories": {
-    "example": "examples"
+    "example": "examples",
+    "test": "test"
   },
   "jest": {
     "testEnvironment": "jsdom",
