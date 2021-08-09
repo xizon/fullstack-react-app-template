@@ -4,19 +4,19 @@ const webpack                    = require('webpack');
 const express                    = require('express');
 const fs                         = require('fs');
 const path                       = require('path');
-const UglifyJsPlugin             = require('uglifyjs-webpack-plugin');
+const TerserPlugin               = require("terser-webpack-plugin");
 const MiniCssExtractPlugin       = require('mini-css-extract-plugin');
-const OptimizeCssAssetsPlugin    = require('optimize-css-assets-webpack-plugin');
+const CssMinimizerPlugin         = require("css-minimizer-webpack-plugin");
 const CleanWebpackPlugin         = require('clean-webpack-plugin');
 const glob                       = require('glob');
 const randomString               = require('random-string');
 const IncludeFileWebpackPlugin   = require('include-file-webpack-plugin');
 const moment                     = require('moment');
-const WebpackDevServer           = require('webpack-dev-server');
-const json                       = JSON.parse(fs.readFileSync('./package.json'));
+const json                       = require('./package.json');
 const webpackDevMiddleware       = require('webpack-dev-middleware');
-const minify                     = require('@node-minify/core');
-const uglifyJS                   = require('@node-minify/uglify-js');
+const WebpackDevServer           = require('webpack-dev-server');
+
+
 const colors = {
     Reset: "\x1b[0m",
     Bright: "\x1b[1m",
@@ -49,17 +49,16 @@ const colors = {
     }
 };
 
-let globs = {
+const globs = {
 	port                : 8080,
 	examples            : 'examples',
 	build               : 'src',
 	dist                : 'dist'
 };
 
-
 const alias = {
 	pathComponents        : './src/components',
-	pathThirdPartyPlugins : './src/components/_third-party-plugins',
+	pathThirdPartyPlugins : './src/components/_plugins',
 	pathRouter            : './src/router',
 	pathPages             : './src/views/_pages',	
 };
@@ -90,6 +89,19 @@ Generated with "npm run build"
 ## Created by          :  ` + json.createdInfo + ( json.email != '' ? ' (' + json.email + ')' : '' ) + `
 ## Released under the ` + json.license + ` license.
 	`;
+
+
+//replacing template
+function tmplFormat( s ) {
+	return s.replace(/\@\@\{website_title\}/g, customWebsiteTitle )
+			.replace(/\@\@\{website_desc\}/g, customWebsiteDesc )
+			.replace(/\@\@\{website_author\}/g, customWebsiteAuthor )
+			.replace(/\@\@\{website_generator\}/g, customWebsiteGenerator )
+			.replace(/\@\@\{website_version\}/g, customWebsiteVersion )
+			.replace(/\@\@\{website_comment\}/g, customWebsiteComment )
+			.replace(/\@\@\{website_hash\}/g, customWebsiteHash );
+}
+
 
 
 // Get all the HTML template files
@@ -146,13 +158,7 @@ class ReplacePlaceholderForFile {
 					
 					
 					if ( data.length > 0 && data.indexOf( '</html>' ) >= 0 ) {
-						data = data.replace(/\@\@\{website_title\}/g, customWebsiteTitle )
-									.replace(/\@\@\{website_desc\}/g, customWebsiteDesc )
-									.replace(/\@\@\{website_author\}/g, customWebsiteAuthor )
-									.replace(/\@\@\{website_generator\}/g, customWebsiteGenerator )
-									.replace(/\@\@\{website_version\}/g, customWebsiteVersion )
-									.replace(/\@\@\{website_comment\}/g, customWebsiteComment )
-									.replace(/\@\@\{website_hash\}/g, customWebsiteHash );
+						data = tmplFormat( data );
 
 						fs.writeFile( filepath, data, (err) => {
 							if ( err ) {
@@ -160,7 +166,10 @@ class ReplacePlaceholderForFile {
 								return;
 							}
 							//file written successfully
-							console.log(colors.fg.Green, `${filepath} written successfully!`, colors.Reset);
+							console.log(colors.bg.Green, colors.fg.White, `${filepath} written successfully!`, colors.Reset);
+              
+         
+                            
 
 						});		
 					}
@@ -183,24 +192,28 @@ class ReplacePlaceholderForFile {
  *  Main configuration
  *************************************
  */
+const devMode = process.env.NODE_ENV !== 'production';
 const webpackConfig = {
-	devtool: process.env.NODE_ENV !== 'production' ? 'source-map' : false,
+	devtool: devMode ? 'source-map' : false,
     mode: 'production',
 	watch: true,
-	node: { fs: 'empty' },
     resolve: {
-        extensions: ['.js', '.es6', '.vue', '.jsx' ],
+		fallback: {
+		    fs: false
+		},
+        extensions: ['.js', '.es6', '.vue', '.jsx', '.ts', '.tsx' ],
 		alias: {
 			
 			// specific mappings.
+			// Supports directories and custom aliases for specific files when the express server is running, 
+			// you need to configure the `babel.config.js` and `tsconfig.json` at the same time
 			'@react.app/components': path.resolve(__dirname, alias.pathComponents ),
 			'@react.app/plugins': path.resolve(__dirname, alias.pathThirdPartyPlugins ),
 			'@react.app/router': path.resolve(__dirname, alias.pathRouter ),
-			'@react.app/pages': path.resolve(__dirname, alias.pathPages ),
-
+			'@react.app/pages': path.resolve(__dirname, alias.pathPages )
+			
 		}
     },
-	
 	
 	//Exclude react from bundle
 //    externals: {
@@ -218,11 +231,12 @@ const webpackConfig = {
     },
 
 	optimization: {
+		minimize: true,
+
 	    minimizer: [
 
-			new UglifyJsPlugin({
-				sourceMap: true,
-				test: /\.min\.js$/i,
+			new TerserPlugin({
+				test: /\.min\.js$/i
 			}),
 			
 			new MiniCssExtractPlugin({
@@ -230,12 +244,17 @@ const webpackConfig = {
 				// both options are optional
 				filename: '../css/[name].css'
 			}),
-			new OptimizeCssAssetsPlugin({
-				assetNameRegExp: /\.min\.css$/g,
-				cssProcessorPluginOptions: {
-				    preset: ['default', { discardComments: { removeAll: false } }],
+			new CssMinimizerPlugin({
+				test:/\.min\.css$/i,
+				parallel: true,
+				minimizerOptions: {
+					preset: [
+						"default",
+						{
+							discardComments: { removeAll: true },
+						},
+					],
 				},
-				canPrint: true
 			}),
 	
 		],
@@ -256,13 +275,14 @@ const webpackConfig = {
 				use: 'json-loader'
 			},
             {
-                test: /\.(js|jsx)$/,
+                test: /\.(js|jsx|ts|tsx)$/,
                 loader: 'babel-loader',
                 exclude: path.resolve( __dirname, 'node_modules' ),
-                query: {  
+                options: {  
 				  'presets': [
-					  '@babel/preset-env', 
+					  '@babel/preset-env',
 					  '@babel/preset-react',
+					  '@babel/preset-typescript',
 						{
 						  plugins: [
 							'@babel/plugin-proposal-class-properties'
@@ -275,31 +295,34 @@ const webpackConfig = {
 				
 				test: /\.(sa|sc|c)ss$/,
 				include: path.resolve( __dirname, './' + globs.build ),
-				use: process.env.NODE_ENV !== 'production' ? [{ loader: "css-loader" }, { loader: 'sass-loader' }] :
-					[
-						// fallback to style-loader in development
-						{
-							loader: MiniCssExtractPlugin.loader, //Extracts CSS into separate files  ( Step 3 ) 
-							options: {
-								// you can specify a publicPath here
-								// by default it use publicPath in webpackOptions.output
-								publicPath: path.resolve(__dirname, './' + globs.dist )
+				use: [
+					// fallback to style-loader in development
+					{
+						loader: MiniCssExtractPlugin.loader, //Extracts CSS into separate files  ( Step 3 )
+						options: {
+							// you can specify a publicPath here
+							// by default it use publicPath in webpackOptions.output
+							publicPath: path.resolve(__dirname, './' + globs.dist )
 
-							}
-						},
+						}
+					},
 
-						{
-							loader: "css-loader" // translates CSS into CommonJS ( Step 2 )
-						},
-						{
-							loader: 'sass-loader', // compiles Sass to CSS ( Step 1 )
-							options: {
-								/* (nested | expanded | compact | compressed) */
-								outputStyle: 'expanded',
-							}
+					{
+						loader: "css-loader",  // interprets @import and url() and will resolve them. ( Step 2 )
+						options: {
+							sourceMap: true
+						}
+					},
+					{
+						loader: 'sass-loader', // compiles Sass to CSS ( Step 1 )
+						options: {
+							sourceMap: true,
+							/* (nested | expanded | compact | compressed) */
+							outputStyle: 'expanded',
+						}
 
-						},
-					]
+					},
+				]
 			},
 			
 			{
@@ -323,7 +346,7 @@ const webpackConfig = {
 				  esModule: false, //change the css path via output
 				  outputPath: (url, resourcePath, context) => { //the files from `./src/...` will copy to `./dist/`
 					  
-					  //original name: path.basename(resourcePath)
+					 //original name: path.basename(resourcePath)
 					 
 					 //fonts
 					 if ( resourcePath.indexOf( 'webfonts/' ) >= 0 || resourcePath.indexOf( 'fonts/' ) >= 0 ) {
@@ -341,24 +364,29 @@ const webpackConfig = {
 				  },
 				  publicPath: (url, resourcePath, context) => { //the css path of output 
 					 
+					// If the file is in the root directory, you can leave it empty. If in another directory, 
+					// you can write: "/blog". (but no trailing slash)
+					const websiteRootDir = '';
+
+
 					 //fonts
 					 if ( resourcePath.indexOf( 'webfonts/' ) >= 0 || resourcePath.indexOf( 'fonts/' ) >= 0 ) {
-						 return `../${globs.dist}/fonts/${url}`;
+						 return `${websiteRootDir}/${globs.dist}/fonts/${url}`;
 					 }
-					  
+					
 					 //imags
 					 if ( resourcePath.indexOf( 'images/' ) >= 0 || resourcePath.indexOf( 'img/' ) >= 0 ) {
-						  return `../${globs.dist}/images/${url}`;
+						 return `${websiteRootDir}/${globs.dist}/images/${url}`;
 					 } 
 					  
-					 return `../${globs.dist}/misc/${url}`;	 
+						 
+					 return `${websiteRootDir}/${globs.dist}/misc/${url}`;
 					  
 					
 				  }
 				}
 			}
 			
-		
         ],
 		
 		
@@ -404,6 +432,9 @@ targetTempFilesName.map( ( event ) => {
 });
 
 
+
+
+
 // String replacement for page templates
 targetTempFilesName.map( ( event ) => {
 	
@@ -417,12 +448,13 @@ targetTempFilesName.map( ( event ) => {
 
 
 
-// Add .min.css files souce map
+// Add souce maps
 webpackConfig.plugins.push(
 	new webpack.SourceMapDevToolPlugin({
-	  filename: '../css/[name].css.map',
+	  filename: '../js/[file].map',
 	})
 );
+
 
 
 /*! 
@@ -449,34 +481,23 @@ targetAllWatchFilesName.map( ( event ) => {
 		
 		// After a short delay the configuration is changed and a banner plugin is added
 		// to the config
-		compiler.apply(
-
-			new CleanWebpackPlugin([
-				globs.build + '/**/*.css'
-			])
-
-		);
+		new CleanWebpackPlugin([
+			globs.build + '/**/*.css'
+		]).apply(compiler);
 	
 		targetTempFilesName.map( ( event ) => {
+			new IncludeFileWebpackPlugin({
+				directory: '',
+				input: `${event[0]}`,
+				output: `./${globs.examples}/${event[1]}`,
+				processIncludeContents: function(html) {
+					return html;
+				}
+			}).apply(compiler);
 
-			compiler.apply(
-
-				new IncludeFileWebpackPlugin({
-					directory: '',
-					input: `${event[0]}`,
-					output: `./${globs.examples}/${event[1]}`,
-					processIncludeContents: function(html) {
-						return html;
-					}
-				}),
-
-				new ReplacePlaceholderForFile({
-					filepath: `./${globs.examples}/${event[1]}`
-				})
-			);
-
-
-
+			new ReplacePlaceholderForFile({
+				filepath: `./${globs.examples}/${event[1]}`
+			}).apply(compiler);
 			
 		});
 
@@ -487,6 +508,9 @@ targetAllWatchFilesName.map( ( event ) => {
 });
 
 
+		
+
+
 
 
 /*! 
@@ -495,63 +519,27 @@ targetAllWatchFilesName.map( ( event ) => {
  *************************************
  */
 
-const server = new WebpackDevServer( compiler, {
-					contentBase: [
-						path.resolve(__dirname, './' )
-					],
-	                hot: true,
-					watchContentBase: true,
-	
-				});
+const server = new WebpackDevServer(compiler, {
+	contentBase: [
+		path.resolve(__dirname, './')
+	],
+	hot: true,
+	watchContentBase: true,
 
-server.listen( globs.port, "localhost", function (err, result) {
+});
+
+server.listen(globs.port, "localhost", function (err, result) {
 	if (err) {
-	    return console.log(colors.fg.Red, err, colors.Reset);
+		return console.log(colors.fg.Red, err, colors.Reset);
 	}
 
 
 	console.log(colors.fg.Yellow, 'Listening at http://localhost:8080/', colors.Reset);
 })
 
-/*! 
- *************************************
- *  Build a table of contents (TOC)
- *************************************
- */
-
-compiler.hooks.done.tap( 'MyPlugin', ( compilation ) => {
-  // return true to emit the output, otherwise false
-	
-	let targetJSFile          = './'+globs.dist+'/js/app.js',
-		targetJSMinFile       = './'+globs.dist+'/js/app.min.js';
-	
-	fs.readFile( targetJSFile, function(err, data ){
-
-	
-		//Update the compressed js file
-		minify({
-			compressor: uglifyJS,
-			input: targetJSFile,
-			output: targetJSMinFile,
-			callback: function(err, min) {
-
-				if ( err ) {
-					console.log(colors.bg.Red, colors.fg.White, '===[ ERROR: File processing failed! ]=== Do not perform other operations after saving the <scss> or <js> file, please wait 10 seconds to rebuild.', colors.Reset);
-				} else {
-					console.log(colors.bg.Green, colors.fg.White, `${targetJSMinFile} compressed successfully!`, colors.Reset);
-				}
 
 
-			}
-		});	
 
-
-	});
-	
-    return true;
-});
-		
-									
 									
 /*! 
  *************************************

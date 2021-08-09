@@ -86,21 +86,41 @@ $ npm run dev
 ```
 
 
+**Step 7 (Optional).** Unit Testing
+
+```sh
+$ npm run test
+```
+
+
+
 
 ### ⚙️ Note:
  
 **a) ERROR: npm update check failed.**
 
+Solution:
+
 ```sh
 $ sudo chown -R $USER:$(id -gn $USER) /Users/{username}/.config
 ```
 
-**b) If you upgrade the version of Node, please execute the following code:**
+**b) ERROR: Node sass version 6.x.x is not compatible with ^ 4.x.x.**
+
+Solution:
+
+```sh
+$ npm install node-sass@4.14.1
+```
+
+
+**c) If you upgrade the version of Node, please execute the following code:**
 
 ```sh
 $ sudo npm install
 $ sudo npm rebuild node-sass
 ```
+
 
 
 ### ⚙️ Site Info Configurations:
@@ -147,7 +167,7 @@ if ( process.env.NODE_ENV === 'development' ) {
 
 ### ⚙️ Custom import third-party library:
 
-The application loads some third-party libraries (icons, animations, 3D engines, etc.) by default, you can load them as needed, or modify the configuration file. Access to `src/client/components/_third-party-plugins/`
+The application loads some third-party libraries (icons, animations, 3D engines, etc.) by default, you can load them as needed, or modify the configuration file. Access to `src/client/components/_plugins/`
 
 
 

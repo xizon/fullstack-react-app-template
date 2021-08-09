@@ -1,5 +1,15 @@
 # Changelog
 
+
+#### = 0.0.8 (August 8, 2021) =
+
+* New: TypeScript Support.
+* New: Support Unit Testing.
+* New: Upgrade webpack 4 to 5. Compilation speed and performance are greatly improved.
+* New: Update and compatible debugging of Node related dependencies
+* Tweak: Optimized the command script.
+
+
 #### = 0.0.7 (May 20, 2021) =
 
 * Tweak: Modified global environment variables during testing.

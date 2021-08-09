@@ -1,15 +1,2 @@
-/*!
- * 
- * DO NOT OVERRIDE THIS FILE.
- * Generated with "npm run build"
- * 
- * ## Project Name        :  Uix Create React App
- * ## Project Description :  A set of React tool and scaffold.
- * ## Project URL         :  https://uiux.cc
- * ## Version             :  0.0.7
- * ## Based on            :  Uix Create React App (https://github.com/xizon/uix-create-react-app#readme)
- * ## Last Update         :  May 20, 2021
- * ## Created by          :  UIUX Lab (https://uiux.cc) (uiuxlab@gmail.com)
- * ## Released under the MIT license.
- * 	
- */button{border:0;margin:5px;border-radius:3px;padding:5px 15px}button:hover{filter:Invert()}
+button{border:0;border-radius:3px;margin:5px;padding:5px 15px}button:hover{filter:Invert()}
+/*# sourceMappingURL=app.min.css.map*/
