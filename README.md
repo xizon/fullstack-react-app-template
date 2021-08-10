@@ -153,12 +153,18 @@ $ npm run dev
 
 Then, you could use the following JavaScript code to debug it:
 
+
 ```js
+import PropTypes from "prop-types";
+import React, { Component } from 'react';
+
+export default class YourComponentName extends Component { ... }
+
 if ( process.env.NODE_ENV === 'development' ) {
 
 	YourComponentName.propTypes = {
 	    displayEnable: PropTypes.bool.isRequired,
-		htmlString: PropTypes.string.isRequired
+		htmlString: PropTypes.oneOfType([PropTypes.string, PropTypes.object])
 	}
 	
 }
