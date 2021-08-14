@@ -5,7 +5,7 @@
   "projectName": "Uix Create React App",
   "createdInfo": "UIUX Lab (https://uiux.cc)",
   "projectURL": "https://uiux.cc",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "A set of React tool and scaffold.",
   "main": "webpack.config.js",
   "directories": {
@@ -29,7 +29,8 @@
   "scripts": {
     "watch": "webpack --watch --progress",
     "start:open": "webpack-dev-server --open-page http://localhost:8080/examples/",
-    "dev": "cross-env NODE_ENV=development webpack --progress --mode development",
+    "check": "tsc",
+    "dev": "cross-env NODE_ENV=development webpack-dev-server",
     "build": "cross-env NODE_ENV=production webpack --progress --mode production",
     "prettier": "prettier \"./dist/css/app.css\"",
     "test": "cross-env NODE_ENV=test jest"
@@ -42,7 +43,7 @@
     "web",
     "react",
     "app",
-    "components",
+    "typescript",
     "ui",
     "front-end",
     "webdesign",
@@ -65,6 +66,8 @@
     "@node-minify/uglify-js": "^4.0.2",
     "@testing-library/jest-dom": "^5.14.1",
     "@testing-library/react": "^11.2.7",
+    "@types/fork-ts-checker-webpack-plugin": "^0.4.5",
+    "@types/react": "^17.0.17",
     "@typescript-eslint/eslint-plugin": "^4.28.5",
     "@typescript-eslint/parser": "^4.28.5",
     "babel-loader": "^8.0.4",
@@ -77,6 +80,7 @@
     "eslint-plugin-prettier": "^3.4.0",
     "eslint-plugin-react": "^7.24.0",
     "file-loader": "^6.2.0",
+    "fork-ts-checker-webpack-plugin": "^6.3.2",
     "glslify-loader": "^2.0.0",
     "html-loader": "^0.5.5",
     "html-webpack-plugin": "^5.3.2",
@@ -114,7 +118,6 @@
   "dependencies": {
     "axios": "^0.21.1",
     "moment": "^2.23.0",
-    "prop-types": "^15.7.2",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-router-config": "^5.1.1",

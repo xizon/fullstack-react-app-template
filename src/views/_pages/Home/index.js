@@ -19,12 +19,12 @@ export default ({ staticContext = {} }) => {
                 <h1>Home!</h1>
 		
 		        <h3>Component Import:</h3>
-				<Button bgColor='' btnName=''/>
-				<Button bgColor='success' btnName='success'/>
-				<Button bgColor='info' btnName='info'/>
-				<Button bgColor='danger' btnName='danger'/>
-				<Button bgColor='warning' btnName='warning'/>
-				<Button {...spreadOperator}/>
+            <Button bgColor='' btnName=''/>
+            <Button bgColor='success' btnName='success'/>
+            <Button bgColor='info' btnName='info'/>
+            <Button bgColor='danger' btnName='danger'/>
+            <Button bgColor='warning' btnName='warning'/>
+            <Button {...spreadOperator}/>
 		
 		
             </div>

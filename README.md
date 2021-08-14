@@ -65,12 +65,22 @@ $ cd /{your_directory}/uix-create-react-app
 $ sudo npm install
 ```
 
+**Step 4.** Commonly used commands:
 
-**Step 4.** Run the following code to enter development mode. The converted ES5 files will be created.
+Debug application. It can be checked separately as TypeScript without compiling and packaging behavior.
+
+```sh
+$ npm run check
+```
+
+To use webpack to bundle files. The converted ES5 files will be created.
 
 ```sh
 $ npm run build
 ```
+
+Using `Ctrl + C` to stop it.
+
 
 **Step 5.** When you done, this will spin up a server that can be accessed at
 
@@ -79,7 +89,7 @@ http://localhost:8080/examples/
 ```
 
 
-**Step 6 (Optional).** Run the following command to test:
+**Step 6 (Optional).** Run the following command to test(No packaging behavior), and used for TypeScript file inspection and debugging:
 
 ```sh
 $ npm run dev
@@ -121,6 +131,15 @@ $ sudo npm install
 $ sudo npm rebuild node-sass
 ```
 
+**d) Some compilation errors of TypeScript:**
+
+
+Install TypeScript and ts-node globally on your machine
+
+```sh
+$ sudo npm install -g typescript ts-node
+```
+
 
 
 ### ⚙️ Site Info Configurations:
@@ -142,33 +161,6 @@ You can update the Placeholders in Templates by modifying the Site Info configur
 ```
 
 
-
-### ⚙️ Run the Webpack build in "development" mode:
-
-Run the following command to test:
-
-```sh
-$ npm run dev
-```
-
-Then, you could use the following JavaScript code to debug it:
-
-
-```js
-import PropTypes from "prop-types";
-import React, { Component } from 'react';
-
-export default class YourComponentName extends Component { ... }
-
-if ( process.env.NODE_ENV === 'development' ) {
-
-	YourComponentName.propTypes = {
-	    displayEnable: PropTypes.bool.isRequired,
-		htmlString: PropTypes.oneOfType([PropTypes.string, PropTypes.object])
-	}
-	
-}
-```
 
 
 ### ⚙️ Custom import third-party library:

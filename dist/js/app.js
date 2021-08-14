@@ -6,9 +6,9 @@
  * ## Project Name        :  Uix Create React App
  * ## Project Description :  A set of React tool and scaffold.
  * ## Project URL         :  https://uiux.cc
- * ## Version             :  0.0.8
+ * ## Version             :  0.0.10
  * ## Based on            :  Uix Create React App (https://github.com/xizon/uix-create-react-app#readme)
- * ## Last Update         :  August 9, 2021
+ * ## Last Update         :  August 14, 2021
  * ## Created by          :  UIUX Lab (https://uiux.cc) (uiuxlab@gmail.com)
  * ## Released under the MIT license.
  *
@@ -5426,8 +5426,6 @@ function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Re
 
 function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
 
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
 /* 
  *************************************
  * <!-- Button -->
@@ -5483,14 +5481,9 @@ var Button = /*#__PURE__*/function (_Component) {
   }]);
 
   return Button;
-}(react.Component); //Configure your application to run in "development" mode.
+}(react.Component);
 
 
-_defineProperty(Button, "propTypes", {});
-
-
-
-if (false) {}
 ;// CONCATENATED MODULE: ./src/views/_pages/Home/index.js
 
 

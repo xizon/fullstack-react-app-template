@@ -1,5 +1,10 @@
 # Changelog
 
+#### = 0.0.10 (August 14, 2021) =
+
+* Fix: Fixed the command issue in development mode.
+
+
 
 #### = 0.0.9 (August 8, 2021) =
 

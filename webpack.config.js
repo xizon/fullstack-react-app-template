@@ -15,6 +15,7 @@ const moment                     = require('moment');
 const json                       = require('./package.json');
 const webpackDevMiddleware       = require('webpack-dev-middleware');
 const WebpackDevServer           = require('webpack-dev-server');
+const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 
 
 const colors = {
@@ -185,6 +186,18 @@ class ReplacePlaceholderForFile {
 	}
 }
 
+// Add warning and error options for ForkTsCheckerWebpackPlugin
+class TreatTSWarningsAsErrorPlugin {
+	apply(compiler) {
+		const hooks = ForkTsCheckerWebpackPlugin.getCompilerHooks(compiler);
+
+		// don't show warnings
+		hooks.issues.tap('TreatTSWarningsAsError', (issues) =>
+			issues.filter((issue) => issue.severity === 'error')
+		);
+	}
+}
+
 
 
 /*! 
@@ -193,10 +206,22 @@ class ReplacePlaceholderForFile {
  *************************************
  */
 const devMode = process.env.NODE_ENV !== 'production';
+
+const checkTSPlugins = !devMode ? [] : [
+	new ForkTsCheckerWebpackPlugin({
+		async: false,
+		eslint: {
+			files: "./src/**/*.{ts,tsx}",
+		},
+	}),
+	new TreatTSWarningsAsErrorPlugin()
+];
+
 const webpackConfig = {
 	devtool: devMode ? 'source-map' : false,
     mode: 'production',
 	watch: true,
+	context: __dirname, // to automatically find tsconfig.json
     resolve: {
 		fallback: {
 		    fs: false
@@ -392,10 +417,7 @@ const webpackConfig = {
 		
 
     },
-	plugins: [
-		
-	]
-	
+	plugins: checkTSPlugins
 	
 };
 

@@ -10,16 +10,32 @@
  import '@react.app/components/Buttons/styles/index.scss';
  
  
+ interface ButtonStylesConfig {
+  info?: {
+    [key: string]: string | undefined;
+  };
+  success?: {
+    [key: string]: string | undefined;
+  };
+  danger?: {
+    [key: string]: string | undefined;
+  };
+  warning?: {
+    [key: string]: string | undefined;
+  };
+}
+
+
  type ButtonProps = {
    bgColor?: string;
    btnName?: string;
    attributes?: any;
  };
- type ButtonState = {};
+ type ButtonState = false;
  
  
  
- const styles: JSON = {
+ const styles: ButtonStylesConfig = {
   info: {
     backgroundColor: '#38c9ff',
     color: 'white'
@@ -41,10 +57,11 @@
 
 
 export default class Button extends Component<ButtonProps, ButtonState> {
-  public static propTypes = {};
+
   constructor(props) {
     super(props);
   }
+
   render() {
 
     const {
@@ -57,7 +74,7 @@ export default class Button extends Component<ButtonProps, ButtonState> {
     return (
       <>
 
-        <button type='button' style={styles[bgColor] || styles['info']} {...attributes}>
+        <button type='button' style={styles[bgColor!] || styles['info']} {...attributes}>
           {btnName || 'Default'}
         </button>
 
@@ -68,10 +85,3 @@ export default class Button extends Component<ButtonProps, ButtonState> {
   }
 }
  
-
-
-//Configure your application to run in "development" mode.
-if ( process.env.NODE_ENV === 'development' ) {
-	//do something.
-	
-}
