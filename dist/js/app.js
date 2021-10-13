@@ -6,9 +6,9 @@
  * ## Project Name        :  Uix Create React App
  * ## Project Description :  A set of React tool and scaffold.
  * ## Project URL         :  https://uiux.cc
- * ## Version             :  0.0.10
+ * ## Version             :  0.0.11
  * ## Based on            :  Uix Create React App (https://github.com/xizon/uix-create-react-app#readme)
- * ## Last Update         :  August 14, 2021
+ * ## Last Update         :  October 13, 2021
  * ## Created by          :  UIUX Lab (https://uiux.cc) (uiuxlab@gmail.com)
  * ## Released under the MIT license.
  *
@@ -5631,7 +5631,7 @@ var Posts = /*#__PURE__*/function (_Component) {
       axios_default()({
         timeout: 15000,
         method: 'get',
-        url: 'https://restcountries.eu/rest/v2',
+        url: 'https://restcountries.com/v2/all',
         //../../assets/json/Posts.json
         data: formData,
         responseType: 'json'
@@ -5763,7 +5763,7 @@ var PostDetail = /*#__PURE__*/function (_Component) {
       axios_default()({
         timeout: 15000,
         method: 'get',
-        url: "https://restcountries.eu/rest/v2/name/".concat(currentID),
+        url: "https://restcountries.com/v2/name/".concat(currentID),
         //../../assets/json/PostDetail.json
         data: formData,
         responseType: 'json'

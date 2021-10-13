@@ -40,7 +40,7 @@ class PostDetail extends Component {
         axios({
           timeout: 15000,
           method: 'get',
-          url: `https://restcountries.eu/rest/v2/name/${currentID}`, //../../assets/json/PostDetail.json
+          url: `https://restcountries.com/v2/name/${currentID}`, //../../assets/json/PostDetail.json
           data: formData,
           responseType: 'json'
         }).then(function (response) {

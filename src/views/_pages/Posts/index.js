@@ -40,7 +40,7 @@ class Posts extends Component {
         axios({
           timeout: 15000,
           method: 'get',
-          url: 'https://restcountries.eu/rest/v2', //../../assets/json/Posts.json
+          url: 'https://restcountries.com/v2/all', //../../assets/json/Posts.json
           data: formData,
           responseType: 'json'
         }).then(function (response) {

@@ -5,7 +5,7 @@
   "projectName": "Uix Create React App",
   "createdInfo": "UIUX Lab (https://uiux.cc)",
   "projectURL": "https://uiux.cc",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "description": "A set of React tool and scaffold.",
   "main": "webpack.config.js",
   "directories": {

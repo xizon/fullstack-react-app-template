@@ -1,5 +1,11 @@
 # Changelog
 
+
+#### = 0.0.11 (October 13, 2021) =
+
+* Tweak: Changed the test API of Posts.
+
+
 #### = 0.0.10 (August 14, 2021) =
 
 * Fix: Fixed the command issue in development mode.
