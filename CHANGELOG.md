@@ -1,6 +1,11 @@
 # Changelog
 
 
+#### = 0.0.12 (November 3, 2021) =
+
+* Tweak: Template label optimization.
+
+
 #### = 0.0.11 (October 13, 2021) =
 
 * Tweak: Changed the test API of Posts.
