@@ -3,12 +3,12 @@
  * DO NOT OVERRIDE THIS FILE.
  * Generated with "npm run build"
  *
- * ## Project Name        :  Uix Create React App
- * ## Project Description :  A set of React tool and scaffold.
+ * ## Project Name        :  Full-Stack React Application Template
+ * ## Project Description :  This repository is a full-stack sample web application based on React+TypeScript+Babel+Webpack+Jest that creates a simple whole-website architecture.
  * ## Project URL         :  https://uiux.cc
- * ## Version             :  0.0.11
- * ## Based on            :  Uix Create React App (https://github.com/xizon/uix-create-react-app#readme)
- * ## Last Update         :  October 13, 2021
+ * ## Version             :  0.0.12
+ * ## Based on            :  Full-Stack React Application Template (https://github.com/xizon/fullstack-react-app-template#readme)
+ * ## Last Update         :  August 29, 2022
  * ## Created by          :  UIUX Lab (https://uiux.cc) (uiuxlab@gmail.com)
  * ## Released under the MIT license.
  *
@@ -42,6 +42,7 @@ module.exports = function xhrAdapter(config) {
   return new Promise(function dispatchXhrRequest(resolve, reject) {
     var requestData = config.data;
     var requestHeaders = config.headers;
+    var responseType = config.responseType;
 
     if (utils.isFormData(requestData)) {
       delete requestHeaders['Content-Type']; // Let the browser set it
@@ -62,23 +63,14 @@ module.exports = function xhrAdapter(config) {
     // Set the request timeout in MS
     request.timeout = config.timeout;
 
-    // Listen for ready state
-    request.onreadystatechange = function handleLoad() {
-      if (!request || request.readyState !== 4) {
+    function onloadend() {
+      if (!request) {
         return;
       }
-
-      // The request errored out and we didn't get a response, this will be
-      // handled by onerror instead
-      // With one exception: request that using file: protocol, most browsers
-      // will return status as 0 even though it's a successful request
-      if (request.status === 0 && !(request.responseURL && request.responseURL.indexOf('file:') === 0)) {
-        return;
-      }
-
       // Prepare the response
       var responseHeaders = 'getAllResponseHeaders' in request ? parseHeaders(request.getAllResponseHeaders()) : null;
-      var responseData = !config.responseType || config.responseType === 'text' ? request.responseText : request.response;
+      var responseData = !responseType || responseType === 'text' ||  responseType === 'json' ?
+        request.responseText : request.response;
       var response = {
         data: responseData,
         status: request.status,
@@ -92,7 +84,30 @@ module.exports = function xhrAdapter(config) {
 
       // Clean up request
       request = null;
-    };
+    }
+
+    if ('onloadend' in request) {
+      // Use onloadend if available
+      request.onloadend = onloadend;
+    } else {
+      // Listen for ready state to emulate onloadend
+      request.onreadystatechange = function handleLoad() {
+        if (!request || request.readyState !== 4) {
+          return;
+        }
+
+        // The request errored out and we didn't get a response, this will be
+        // handled by onerror instead
+        // With one exception: request that using file: protocol, most browsers
+        // will return status as 0 even though it's a successful request
+        if (request.status === 0 && !(request.responseURL && request.responseURL.indexOf('file:') === 0)) {
+          return;
+        }
+        // readystate handler is calling before onerror or ontimeout handlers,
+        // so we should call onloadend on the next 'tick'
+        setTimeout(onloadend);
+      };
+    }
 
     // Handle browser request cancellation (as opposed to a manual cancellation)
     request.onabort = function handleAbort() {
@@ -122,7 +137,10 @@ module.exports = function xhrAdapter(config) {
       if (config.timeoutErrorMessage) {
         timeoutErrorMessage = config.timeoutErrorMessage;
       }
-      reject(createError(timeoutErrorMessage, config, 'ECONNABORTED',
+      reject(createError(
+        timeoutErrorMessage,
+        config,
+        config.transitional && config.transitional.clarifyTimeoutError ? 'ETIMEDOUT' : 'ECONNABORTED',
         request));
 
       // Clean up request
@@ -162,16 +180,8 @@ module.exports = function xhrAdapter(config) {
     }
 
     // Add responseType to request if needed
-    if (config.responseType) {
-      try {
-        request.responseType = config.responseType;
-      } catch (e) {
-        // Expected DOMException thrown by browsers not compatible XMLHttpRequest Level 2.
-        // But, this can be suppressed for 'json' type as it can be parsed by default 'transformResponse' function.
-        if (config.responseType !== 'json') {
-          throw e;
-        }
-      }
+    if (responseType && responseType !== 'json') {
+      request.responseType = config.responseType;
     }
 
     // Handle progress if needed
@@ -269,7 +279,7 @@ axios.isAxiosError = __webpack_require__(268);
 module.exports = axios;
 
 // Allow use of default import syntax in TypeScript
-module.exports.default = axios;
+module.exports["default"] = axios;
 
 
 /***/ }),
@@ -390,7 +400,9 @@ var buildURL = __webpack_require__(327);
 var InterceptorManager = __webpack_require__(782);
 var dispatchRequest = __webpack_require__(572);
 var mergeConfig = __webpack_require__(185);
+var validator = __webpack_require__(875);
 
+var validators = validator.validators;
 /**
  * Create a new instance of Axios
  *
@@ -430,20 +442,71 @@ Axios.prototype.request = function request(config) {
     config.method = 'get';
   }
 
-  // Hook up interceptors middleware
-  var chain = [dispatchRequest, undefined];
-  var promise = Promise.resolve(config);
+  var transitional = config.transitional;
 
+  if (transitional !== undefined) {
+    validator.assertOptions(transitional, {
+      silentJSONParsing: validators.transitional(validators.boolean, '1.0.0'),
+      forcedJSONParsing: validators.transitional(validators.boolean, '1.0.0'),
+      clarifyTimeoutError: validators.transitional(validators.boolean, '1.0.0')
+    }, false);
+  }
+
+  // filter out skipped interceptors
+  var requestInterceptorChain = [];
+  var synchronousRequestInterceptors = true;
   this.interceptors.request.forEach(function unshiftRequestInterceptors(interceptor) {
-    chain.unshift(interceptor.fulfilled, interceptor.rejected);
+    if (typeof interceptor.runWhen === 'function' && interceptor.runWhen(config) === false) {
+      return;
+    }
+
+    synchronousRequestInterceptors = synchronousRequestInterceptors && interceptor.synchronous;
+
+    requestInterceptorChain.unshift(interceptor.fulfilled, interceptor.rejected);
   });
 
+  var responseInterceptorChain = [];
   this.interceptors.response.forEach(function pushResponseInterceptors(interceptor) {
-    chain.push(interceptor.fulfilled, interceptor.rejected);
+    responseInterceptorChain.push(interceptor.fulfilled, interceptor.rejected);
   });
 
-  while (chain.length) {
-    promise = promise.then(chain.shift(), chain.shift());
+  var promise;
+
+  if (!synchronousRequestInterceptors) {
+    var chain = [dispatchRequest, undefined];
+
+    Array.prototype.unshift.apply(chain, requestInterceptorChain);
+    chain = chain.concat(responseInterceptorChain);
+
+    promise = Promise.resolve(config);
+    while (chain.length) {
+      promise = promise.then(chain.shift(), chain.shift());
+    }
+
+    return promise;
+  }
+
+
+  var newConfig = config;
+  while (requestInterceptorChain.length) {
+    var onFulfilled = requestInterceptorChain.shift();
+    var onRejected = requestInterceptorChain.shift();
+    try {
+      newConfig = onFulfilled(newConfig);
+    } catch (error) {
+      onRejected(error);
+      break;
+    }
+  }
+
+  try {
+    promise = dispatchRequest(newConfig);
+  } catch (error) {
+    return Promise.reject(error);
+  }
+
+  while (responseInterceptorChain.length) {
+    promise = promise.then(responseInterceptorChain.shift(), responseInterceptorChain.shift());
   }
 
   return promise;
@@ -502,10 +565,12 @@ function InterceptorManager() {
  *
  * @return {Number} An ID used to remove interceptor later
  */
-InterceptorManager.prototype.use = function use(fulfilled, rejected) {
+InterceptorManager.prototype.use = function use(fulfilled, rejected, options) {
   this.handlers.push({
     fulfilled: fulfilled,
-    rejected: rejected
+    rejected: rejected,
+    synchronous: options ? options.synchronous : false,
+    runWhen: options ? options.runWhen : null
   });
   return this.handlers.length - 1;
 };
@@ -629,7 +694,8 @@ module.exports = function dispatchRequest(config) {
   config.headers = config.headers || {};
 
   // Transform request data
-  config.data = transformData(
+  config.data = transformData.call(
+    config,
     config.data,
     config.headers,
     config.transformRequest
@@ -655,7 +721,8 @@ module.exports = function dispatchRequest(config) {
     throwIfCancellationRequested(config);
 
     // Transform response data
-    response.data = transformData(
+    response.data = transformData.call(
+      config,
       response.data,
       response.headers,
       config.transformResponse
@@ -668,7 +735,8 @@ module.exports = function dispatchRequest(config) {
 
       // Transform response data
       if (reason && reason.response) {
-        reason.response.data = transformData(
+        reason.response.data = transformData.call(
+          config,
           reason.response.data,
           reason.response.headers,
           config.transformResponse
@@ -868,6 +936,7 @@ module.exports = function settle(resolve, reject, response) {
 
 
 var utils = __webpack_require__(867);
+var defaults = __webpack_require__(655);
 
 /**
  * Transform the data for a request or a response
@@ -878,9 +947,10 @@ var utils = __webpack_require__(867);
  * @returns {*} The resulting transformed data
  */
 module.exports = function transformData(data, headers, fns) {
+  var context = this || defaults;
   /*eslint no-param-reassign:0*/
   utils.forEach(fns, function transform(fn) {
-    data = fn(data, headers);
+    data = fn.call(context, data, headers);
   });
 
   return data;
@@ -897,6 +967,7 @@ module.exports = function transformData(data, headers, fns) {
 
 var utils = __webpack_require__(867);
 var normalizeHeaderName = __webpack_require__(16);
+var enhanceError = __webpack_require__(481);
 
 var DEFAULT_CONTENT_TYPE = {
   'Content-Type': 'application/x-www-form-urlencoded'
@@ -920,12 +991,35 @@ function getDefaultAdapter() {
   return adapter;
 }
 
+function stringifySafely(rawValue, parser, encoder) {
+  if (utils.isString(rawValue)) {
+    try {
+      (parser || JSON.parse)(rawValue);
+      return utils.trim(rawValue);
+    } catch (e) {
+      if (e.name !== 'SyntaxError') {
+        throw e;
+      }
+    }
+  }
+
+  return (encoder || JSON.stringify)(rawValue);
+}
+
 var defaults = {
+
+  transitional: {
+    silentJSONParsing: true,
+    forcedJSONParsing: true,
+    clarifyTimeoutError: false
+  },
+
   adapter: getDefaultAdapter(),
 
   transformRequest: [function transformRequest(data, headers) {
     normalizeHeaderName(headers, 'Accept');
     normalizeHeaderName(headers, 'Content-Type');
+
     if (utils.isFormData(data) ||
       utils.isArrayBuffer(data) ||
       utils.isBuffer(data) ||
@@ -942,20 +1036,32 @@ var defaults = {
       setContentTypeIfUnset(headers, 'application/x-www-form-urlencoded;charset=utf-8');
       return data.toString();
     }
-    if (utils.isObject(data)) {
-      setContentTypeIfUnset(headers, 'application/json;charset=utf-8');
-      return JSON.stringify(data);
+    if (utils.isObject(data) || (headers && headers['Content-Type'] === 'application/json')) {
+      setContentTypeIfUnset(headers, 'application/json');
+      return stringifySafely(data);
     }
     return data;
   }],
 
   transformResponse: [function transformResponse(data) {
-    /*eslint no-param-reassign:0*/
-    if (typeof data === 'string') {
+    var transitional = this.transitional;
+    var silentJSONParsing = transitional && transitional.silentJSONParsing;
+    var forcedJSONParsing = transitional && transitional.forcedJSONParsing;
+    var strictJSONParsing = !silentJSONParsing && this.responseType === 'json';
+
+    if (strictJSONParsing || (forcedJSONParsing && utils.isString(data) && data.length)) {
       try {
-        data = JSON.parse(data);
-      } catch (e) { /* Ignore */ }
+        return JSON.parse(data);
+      } catch (e) {
+        if (strictJSONParsing) {
+          if (e.name === 'SyntaxError') {
+            throw enhanceError(e, this, 'E_JSON_PARSE');
+          }
+          throw e;
+        }
+      }
     }
+
     return data;
   }],
 
@@ -1408,6 +1514,119 @@ module.exports = function spread(callback) {
 
 /***/ }),
 
+/***/ 875:
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
+
+"use strict";
+
+
+var pkg = __webpack_require__(593);
+
+var validators = {};
+
+// eslint-disable-next-line func-names
+['object', 'boolean', 'number', 'function', 'string', 'symbol'].forEach(function(type, i) {
+  validators[type] = function validator(thing) {
+    return typeof thing === type || 'a' + (i < 1 ? 'n ' : ' ') + type;
+  };
+});
+
+var deprecatedWarnings = {};
+var currentVerArr = pkg.version.split('.');
+
+/**
+ * Compare package versions
+ * @param {string} version
+ * @param {string?} thanVersion
+ * @returns {boolean}
+ */
+function isOlderVersion(version, thanVersion) {
+  var pkgVersionArr = thanVersion ? thanVersion.split('.') : currentVerArr;
+  var destVer = version.split('.');
+  for (var i = 0; i < 3; i++) {
+    if (pkgVersionArr[i] > destVer[i]) {
+      return true;
+    } else if (pkgVersionArr[i] < destVer[i]) {
+      return false;
+    }
+  }
+  return false;
+}
+
+/**
+ * Transitional option validator
+ * @param {function|boolean?} validator
+ * @param {string?} version
+ * @param {string} message
+ * @returns {function}
+ */
+validators.transitional = function transitional(validator, version, message) {
+  var isDeprecated = version && isOlderVersion(version);
+
+  function formatMessage(opt, desc) {
+    return '[Axios v' + pkg.version + '] Transitional option \'' + opt + '\'' + desc + (message ? '. ' + message : '');
+  }
+
+  // eslint-disable-next-line func-names
+  return function(value, opt, opts) {
+    if (validator === false) {
+      throw new Error(formatMessage(opt, ' has been removed in ' + version));
+    }
+
+    if (isDeprecated && !deprecatedWarnings[opt]) {
+      deprecatedWarnings[opt] = true;
+      // eslint-disable-next-line no-console
+      console.warn(
+        formatMessage(
+          opt,
+          ' has been deprecated since v' + version + ' and will be removed in the near future'
+        )
+      );
+    }
+
+    return validator ? validator(value, opt, opts) : true;
+  };
+};
+
+/**
+ * Assert object's properties type
+ * @param {object} options
+ * @param {object} schema
+ * @param {boolean?} allowUnknown
+ */
+
+function assertOptions(options, schema, allowUnknown) {
+  if (typeof options !== 'object') {
+    throw new TypeError('options must be an object');
+  }
+  var keys = Object.keys(options);
+  var i = keys.length;
+  while (i-- > 0) {
+    var opt = keys[i];
+    var validator = schema[opt];
+    if (validator) {
+      var value = options[opt];
+      var result = value === undefined || validator(value, opt, options);
+      if (result !== true) {
+        throw new TypeError('option ' + opt + ' must be ' + result);
+      }
+      continue;
+    }
+    if (allowUnknown !== true) {
+      throw Error('Unknown option ' + opt);
+    }
+  }
+}
+
+module.exports = {
+  isOlderVersion: isOlderVersion,
+  assertOptions: assertOptions,
+  validators: validators
+};
+
+
+/***/ }),
+
 /***/ 867:
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
@@ -1415,8 +1634,6 @@ module.exports = function spread(callback) {
 
 
 var bind = __webpack_require__(849);
-
-/*global toString:true*/
 
 // utils is a library of generic helper functions non-specific to axios
 
@@ -1601,7 +1818,7 @@ function isURLSearchParams(val) {
  * @returns {String} The String freed of excess whitespace
  */
 function trim(str) {
-  return str.replace(/^\s*/, '').replace(/\s*$/, '');
+  return str.trim ? str.trim() : str.replace(/^\s+|\s+$/g, '');
 }
 
 /**
@@ -2460,6 +2677,7 @@ module.exports = function() {
   // Keep this list in sync with production version in `./factoryWithTypeCheckers.js`.
   var ReactPropTypes = {
     array: shim,
+    bigint: shim,
     bool: shim,
     func: shim,
     number: shim,
@@ -2989,6 +3207,14 @@ if (true) {
 } else {}
 
 
+/***/ }),
+
+/***/ 593:
+/***/ ((module) => {
+
+"use strict";
+module.exports = JSON.parse('{"_from":"axios@^0.21.1","_id":"axios@0.21.4","_inBundle":false,"_integrity":"sha512-ut5vewkiu8jjGBdqpM44XxjuCjq9LAKeHVmoVfHVzy8eHgxxq8SbAVQNovDA8mVi05kP0Ea/n/UzcSHcTJQfNg==","_location":"/axios","_phantomChildren":{},"_requested":{"type":"range","registry":true,"raw":"axios@^0.21.1","name":"axios","escapedName":"axios","rawSpec":"^0.21.1","saveSpec":null,"fetchSpec":"^0.21.1"},"_requiredBy":["/"],"_resolved":"https://registry.npmjs.org/axios/-/axios-0.21.4.tgz","_shasum":"c67b90dc0568e5c1cf2b0b858c43ba28e2eda575","_spec":"axios@^0.21.1","_where":"/Applications/MAMP/htdocs/fullstack-react-app-template","author":{"name":"Matt Zabriskie"},"browser":{"./lib/adapters/http.js":"./lib/adapters/xhr.js"},"bugs":{"url":"https://github.com/axios/axios/issues"},"bundleDependencies":false,"bundlesize":[{"path":"./dist/axios.min.js","threshold":"5kB"}],"dependencies":{"follow-redirects":"^1.14.0"},"deprecated":false,"description":"Promise based HTTP client for the browser and node.js","devDependencies":{"coveralls":"^3.0.0","es6-promise":"^4.2.4","grunt":"^1.3.0","grunt-banner":"^0.6.0","grunt-cli":"^1.2.0","grunt-contrib-clean":"^1.1.0","grunt-contrib-watch":"^1.0.0","grunt-eslint":"^23.0.0","grunt-karma":"^4.0.0","grunt-mocha-test":"^0.13.3","grunt-ts":"^6.0.0-beta.19","grunt-webpack":"^4.0.2","istanbul-instrumenter-loader":"^1.0.0","jasmine-core":"^2.4.1","karma":"^6.3.2","karma-chrome-launcher":"^3.1.0","karma-firefox-launcher":"^2.1.0","karma-jasmine":"^1.1.1","karma-jasmine-ajax":"^0.1.13","karma-safari-launcher":"^1.0.0","karma-sauce-launcher":"^4.3.6","karma-sinon":"^1.0.5","karma-sourcemap-loader":"^0.3.8","karma-webpack":"^4.0.2","load-grunt-tasks":"^3.5.2","minimist":"^1.2.0","mocha":"^8.2.1","sinon":"^4.5.0","terser-webpack-plugin":"^4.2.3","typescript":"^4.0.5","url-search-params":"^0.10.0","webpack":"^4.44.2","webpack-dev-server":"^3.11.0"},"homepage":"https://axios-http.com","jsdelivr":"dist/axios.min.js","keywords":["xhr","http","ajax","promise","node"],"license":"MIT","main":"index.js","name":"axios","repository":{"type":"git","url":"git+https://github.com/axios/axios.git"},"scripts":{"build":"NODE_ENV=production grunt build","coveralls":"cat coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js","examples":"node ./examples/server.js","fix":"eslint --fix lib/**/*.js","postversion":"git push && git push --tags","preversion":"npm test","start":"node ./sandbox/server.js","test":"grunt test","version":"npm run build && grunt version && git add -A dist && git add CHANGELOG.md bower.json package.json"},"typings":"./index.d.ts","unpkg":"dist/axios.min.js","version":"0.21.4"}');
+
 /***/ })
 
 /******/ 	});
@@ -3071,11 +3297,10 @@ var react = __webpack_require__(294);
 var react_dom = __webpack_require__(935);
 ;// CONCATENATED MODULE: ./node_modules/@babel/runtime/helpers/esm/setPrototypeOf.js
 function _setPrototypeOf(o, p) {
-  _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) {
+  _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function _setPrototypeOf(o, p) {
     o.__proto__ = p;
     return o;
   };
-
   return _setPrototypeOf(o, p);
 }
 ;// CONCATENATED MODULE: ./node_modules/@babel/runtime/helpers/esm/inheritsLoose.js
@@ -3085,12 +3310,9 @@ function _inheritsLoose(subClass, superClass) {
   subClass.prototype.constructor = subClass;
   _setPrototypeOf(subClass, superClass);
 }
-// EXTERNAL MODULE: ./node_modules/prop-types/index.js
-var prop_types = __webpack_require__(697);
-var prop_types_default = /*#__PURE__*/__webpack_require__.n(prop_types);
 ;// CONCATENATED MODULE: ./node_modules/@babel/runtime/helpers/esm/extends.js
 function extends_extends() {
-  extends_extends = Object.assign || function (target) {
+  extends_extends = Object.assign ? Object.assign.bind() : function (target) {
     for (var i = 1; i < arguments.length; i++) {
       var source = arguments[i];
 
@@ -3103,7 +3325,6 @@ function extends_extends() {
 
     return target;
   };
-
   return extends_extends.apply(this, arguments);
 }
 ;// CONCATENATED MODULE: ./node_modules/resolve-pathname/esm/resolve-pathname.js
@@ -3231,10 +3452,12 @@ function tiny_invariant_esm_invariant(condition, message) {
     if (isProduction) {
         throw new Error(prefix);
     }
-    throw new Error(prefix + ": " + (message || ''));
+    var provided = typeof message === 'function' ? message() : message;
+    var value = provided ? prefix + ": " + provided : prefix;
+    throw new Error(value);
 }
 
-/* harmony default export */ const tiny_invariant_esm = (tiny_invariant_esm_invariant);
+
 
 ;// CONCATENATED MODULE: ./node_modules/history/esm/history.js
 
@@ -3486,7 +3709,7 @@ function createBrowserHistory(props) {
     props = {};
   }
 
-  !canUseDOM ?  false ? 0 : tiny_invariant_esm(false) : void 0;
+  !canUseDOM ?  false ? 0 : tiny_invariant_esm_invariant(false) : void 0;
   var globalHistory = window.history;
   var canUseHistory = supportsHistory();
   var needsHashChangeListener = !supportsPopStateOnHashChange();
@@ -3771,7 +3994,7 @@ function createHashHistory(props) {
     props = {};
   }
 
-  !canUseDOM ?  false ? 0 : tiny_invariant_esm(false) : void 0;
+  !canUseDOM ?  false ? 0 : tiny_invariant_esm_invariant(false) : void 0;
   var globalHistory = window.history;
   var canGoWithoutReload = supportsGoWithoutReloadUsingHash();
   var _props = props,
@@ -4157,6 +4380,9 @@ function createMemoryHistory(props) {
 
 
 
+// EXTERNAL MODULE: ./node_modules/prop-types/index.js
+var prop_types = __webpack_require__(697);
+var prop_types_default = /*#__PURE__*/__webpack_require__.n(prop_types);
 ;// CONCATENATED MODULE: ./node_modules/mini-create-react-context/dist/esm/index.js
 
 
@@ -4377,29 +4603,15 @@ var createNamedContext = function createNamedContext(name) {
   return context;
 };
 
-var historyContext =
-/*#__PURE__*/
-createNamedContext("Router-History");
+var historyContext = /*#__PURE__*/createNamedContext("Router-History");
 
-// TODO: Replace with React.createContext once we can assume React 16+
-
-var createNamedContext$1 = function createNamedContext(name) {
-  var context = esm();
-  context.displayName = name;
-  return context;
-};
-
-var context =
-/*#__PURE__*/
-createNamedContext$1("Router");
+var context = /*#__PURE__*/createNamedContext("Router");
 
 /**
  * The public API for putting history on context.
  */
 
-var react_router_Router =
-/*#__PURE__*/
-function (_React$Component) {
+var react_router_Router = /*#__PURE__*/function (_React$Component) {
   _inheritsLoose(Router, _React$Component);
 
   Router.computeRootMatch = function computeRootMatch(pathname) {
@@ -4428,13 +4640,7 @@ function (_React$Component) {
 
     if (!props.staticContext) {
       _this.unlisten = props.history.listen(function (location) {
-        if (_this._isMounted) {
-          _this.setState({
-            location: location
-          });
-        } else {
-          _this._pendingLocation = location;
-        }
+        _this._pendingLocation = location;
       });
     }
 
@@ -4444,7 +4650,25 @@ function (_React$Component) {
   var _proto = Router.prototype;
 
   _proto.componentDidMount = function componentDidMount() {
+    var _this2 = this;
+
     this._isMounted = true;
+
+    if (this.unlisten) {
+      // Any pre-mount location changes have been captured at
+      // this point, so unregister the listener.
+      this.unlisten();
+    }
+
+    if (!this.props.staticContext) {
+      this.unlisten = this.props.history.listen(function (location) {
+        if (_this2._isMounted) {
+          _this2.setState({
+            location: location
+          });
+        }
+      });
+    }
 
     if (this._pendingLocation) {
       this.setState({
@@ -4454,18 +4678,22 @@ function (_React$Component) {
   };
 
   _proto.componentWillUnmount = function componentWillUnmount() {
-    if (this.unlisten) this.unlisten();
+    if (this.unlisten) {
+      this.unlisten();
+      this._isMounted = false;
+      this._pendingLocation = null;
+    }
   };
 
   _proto.render = function render() {
-    return react.createElement(context.Provider, {
+    return /*#__PURE__*/react.createElement(context.Provider, {
       value: {
         history: this.props.history,
         location: this.state.location,
         match: Router.computeRootMatch(this.state.location.pathname),
         staticContext: this.props.staticContext
       }
-    }, react.createElement(historyContext.Provider, {
+    }, /*#__PURE__*/react.createElement(historyContext.Provider, {
       children: this.props.children || null,
       value: this.props.history
     }));
@@ -4480,9 +4708,7 @@ if (false) {}
  * The public API for a <Router> that stores location in memory.
  */
 
-var MemoryRouter =
-/*#__PURE__*/
-function (_React$Component) {
+var MemoryRouter = /*#__PURE__*/function (_React$Component) {
   _inheritsLoose(MemoryRouter, _React$Component);
 
   function MemoryRouter() {
@@ -4500,7 +4726,7 @@ function (_React$Component) {
   var _proto = MemoryRouter.prototype;
 
   _proto.render = function render() {
-    return react.createElement(react_router_Router, {
+    return /*#__PURE__*/react.createElement(react_router_Router, {
       history: this.history,
       children: this.props.children
     });
@@ -4511,9 +4737,7 @@ function (_React$Component) {
 
 if (false) {}
 
-var Lifecycle =
-/*#__PURE__*/
-function (_React$Component) {
+var Lifecycle = /*#__PURE__*/function (_React$Component) {
   _inheritsLoose(Lifecycle, _React$Component);
 
   function Lifecycle() {
@@ -4549,11 +4773,11 @@ function Prompt(_ref) {
   var message = _ref.message,
       _ref$when = _ref.when,
       when = _ref$when === void 0 ? true : _ref$when;
-  return React.createElement(context.Consumer, null, function (context) {
+  return /*#__PURE__*/React.createElement(context.Consumer, null, function (context) {
     !context ?  false ? 0 : invariant(false) : void 0;
     if (!when || context.staticContext) return null;
     var method = context.history.block;
-    return React.createElement(Lifecycle, {
+    return /*#__PURE__*/React.createElement(Lifecycle, {
       onMount: function onMount(self) {
         self.release = method(message);
       },
@@ -4616,8 +4840,8 @@ function Redirect(_ref) {
       to = _ref.to,
       _ref$push = _ref.push,
       push = _ref$push === void 0 ? false : _ref$push;
-  return react.createElement(context.Consumer, null, function (context) {
-    !context ?  false ? 0 : tiny_invariant_esm(false) : void 0;
+  return /*#__PURE__*/react.createElement(context.Consumer, null, function (context) {
+    !context ?  false ? 0 : tiny_invariant_esm_invariant(false) : void 0;
     var history = context.history,
         staticContext = context.staticContext;
     var method = push ? history.push : history.replace;
@@ -4631,7 +4855,7 @@ function Redirect(_ref) {
       return null;
     }
 
-    return react.createElement(Lifecycle, {
+    return /*#__PURE__*/react.createElement(Lifecycle, {
       onMount: function onMount() {
         method(location);
       },
@@ -4732,7 +4956,7 @@ function react_router_matchPath(pathname, options) {
 }
 
 function isEmptyChildren(children) {
-  return React.Children.count(children) === 0;
+  return react.Children.count(children) === 0;
 }
 
 function evalChildrenDev(children, props, path) {
@@ -4745,9 +4969,7 @@ function evalChildrenDev(children, props, path) {
  */
 
 
-var Route =
-/*#__PURE__*/
-function (_React$Component) {
+var Route = /*#__PURE__*/function (_React$Component) {
   _inheritsLoose(Route, _React$Component);
 
   function Route() {
@@ -4759,8 +4981,8 @@ function (_React$Component) {
   _proto.render = function render() {
     var _this = this;
 
-    return react.createElement(context.Consumer, null, function (context$1) {
-      !context$1 ?  false ? 0 : tiny_invariant_esm(false) : void 0;
+    return /*#__PURE__*/react.createElement(context.Consumer, null, function (context$1) {
+      !context$1 ?  false ? 0 : tiny_invariant_esm_invariant(false) : void 0;
       var location = _this.props.location || context$1.location;
       var match = _this.props.computedMatch ? _this.props.computedMatch // <Switch> already computed the match for us
       : _this.props.path ? react_router_matchPath(location.pathname, _this.props) : context$1.match;
@@ -4776,13 +4998,13 @@ function (_React$Component) {
           render = _this$props.render; // Preact uses an empty array as children by
       // default, so use null if that's the case.
 
-      if (Array.isArray(children) && children.length === 0) {
+      if (Array.isArray(children) && isEmptyChildren(children)) {
         children = null;
       }
 
-      return react.createElement(context.Provider, {
+      return /*#__PURE__*/react.createElement(context.Provider, {
         value: props
-      }, props.match ? children ? typeof children === "function" ?  false ? 0 : children(props) : children : component ? react.createElement(component, props) : render ? render(props) : null : typeof children === "function" ?  false ? 0 : children(props) : null);
+      }, props.match ? children ? typeof children === "function" ?  false ? 0 : children(props) : children : component ? /*#__PURE__*/react.createElement(component, props) : render ? render(props) : null : typeof children === "function" ?  false ? 0 : children(props) : null);
     });
   };
 
@@ -4817,7 +5039,7 @@ function createURL(location) {
 
 function staticHandler(methodName) {
   return function () {
-      false ? 0 : tiny_invariant_esm(false) ;
+      false ? 0 : tiny_invariant_esm_invariant(false) ;
   };
 }
 
@@ -4830,9 +5052,7 @@ function noop() {}
  */
 
 
-var StaticRouter =
-/*#__PURE__*/
-function (_React$Component) {
+var StaticRouter = /*#__PURE__*/function (_React$Component) {
   _inheritsLoose(StaticRouter, _React$Component);
 
   function StaticRouter() {
@@ -4900,7 +5120,7 @@ function (_React$Component) {
       listen: this.handleListen,
       block: this.handleBlock
     };
-    return react.createElement(react_router_Router, extends_extends({}, rest, {
+    return /*#__PURE__*/react.createElement(react_router_Router, extends_extends({}, rest, {
       history: history,
       staticContext: context
     }));
@@ -4915,9 +5135,7 @@ if (false) {}
  * The public API for rendering the first <Route> that matches.
  */
 
-var Switch =
-/*#__PURE__*/
-function (_React$Component) {
+var Switch = /*#__PURE__*/function (_React$Component) {
   _inheritsLoose(Switch, _React$Component);
 
   function Switch() {
@@ -4929,8 +5147,8 @@ function (_React$Component) {
   _proto.render = function render() {
     var _this = this;
 
-    return react.createElement(context.Consumer, null, function (context) {
-      !context ?  false ? 0 : tiny_invariant_esm(false) : void 0;
+    return /*#__PURE__*/react.createElement(context.Consumer, null, function (context) {
+      !context ?  false ? 0 : tiny_invariant_esm_invariant(false) : void 0;
       var location = _this.props.location || context.location;
       var element, match; // We use React.Children.forEach instead of React.Children.toArray().find()
       // here because toArray adds keys to all child elements and we do not want
@@ -4938,7 +5156,7 @@ function (_React$Component) {
       // component at different URLs.
 
       react.Children.forEach(_this.props.children, function (child) {
-        if (match == null && react.isValidElement(child)) {
+        if (match == null && /*#__PURE__*/react.isValidElement(child)) {
           element = child;
           var path = child.props.path || child.props.from;
           match = path ? react_router_matchPath(location.pathname, extends_extends({}, child.props, {
@@ -4946,7 +5164,7 @@ function (_React$Component) {
           })) : context.match;
         }
       });
-      return match ? react.cloneElement(element, {
+      return match ? /*#__PURE__*/react.cloneElement(element, {
         location: location,
         computedMatch: match
       }) : null;
@@ -4969,9 +5187,9 @@ function withRouter(Component) {
     var wrappedComponentRef = props.wrappedComponentRef,
         remainingProps = _objectWithoutPropertiesLoose(props, ["wrappedComponentRef"]);
 
-    return React.createElement(context.Consumer, null, function (context) {
+    return /*#__PURE__*/React.createElement(context.Consumer, null, function (context) {
       !context ?  false ? 0 : invariant(false) : void 0;
-      return React.createElement(Component, _extends({}, remainingProps, context, {
+      return /*#__PURE__*/React.createElement(Component, _extends({}, remainingProps, context, {
         ref: wrappedComponentRef
       }));
     });
@@ -5031,9 +5249,7 @@ if (false) { var secondaryBuildName, initialBuildName, buildNames, key, global; 
  * The public API for a <Router> that uses HTML5 history.
  */
 
-var BrowserRouter =
-/*#__PURE__*/
-function (_React$Component) {
+var BrowserRouter = /*#__PURE__*/function (_React$Component) {
   _inheritsLoose(BrowserRouter, _React$Component);
 
   function BrowserRouter() {
@@ -5051,7 +5267,7 @@ function (_React$Component) {
   var _proto = BrowserRouter.prototype;
 
   _proto.render = function render() {
-    return react.createElement(react_router_Router, {
+    return /*#__PURE__*/react.createElement(react_router_Router, {
       history: this.history,
       children: this.props.children
     });
@@ -5066,9 +5282,7 @@ if (false) {}
  * The public API for a <Router> that uses window.location.hash.
  */
 
-var HashRouter =
-/*#__PURE__*/
-function (_React$Component) {
+var HashRouter = /*#__PURE__*/function (_React$Component) {
   _inheritsLoose(HashRouter, _React$Component);
 
   function HashRouter() {
@@ -5086,7 +5300,7 @@ function (_React$Component) {
   var _proto = HashRouter.prototype;
 
   _proto.render = function render() {
-    return react.createElement(react_router_Router, {
+    return /*#__PURE__*/react.createElement(react_router_Router, {
       history: this.history,
       children: this.props.children
     });
@@ -5155,7 +5369,7 @@ var LinkAnchor = forwardRef(function (_ref, forwardedRef) {
   /* eslint-disable-next-line jsx-a11y/anchor-has-content */
 
 
-  return react.createElement("a", props);
+  return /*#__PURE__*/react.createElement("a", props);
 });
 
 if (false) {}
@@ -5172,8 +5386,8 @@ var Link = forwardRef(function (_ref2, forwardedRef) {
       innerRef = _ref2.innerRef,
       rest = objectWithoutPropertiesLoose_objectWithoutPropertiesLoose(_ref2, ["component", "replace", "to", "innerRef"]);
 
-  return react.createElement(context.Consumer, null, function (context) {
-    !context ?  false ? 0 : tiny_invariant_esm(false) : void 0;
+  return /*#__PURE__*/react.createElement(context.Consumer, null, function (context) {
+    !context ?  false ? 0 : tiny_invariant_esm_invariant(false) : void 0;
     var history = context.history;
     var location = normalizeToLocation(resolveToLocation(to, context.location), context.location);
     var href = location ? history.createHref(location) : "";
@@ -5182,7 +5396,8 @@ var Link = forwardRef(function (_ref2, forwardedRef) {
       href: href,
       navigate: function navigate() {
         var location = resolveToLocation(to, context.location);
-        var method = replace ? history.replace : history.push;
+        var isDuplicateNavigation = createPath(context.location) === createPath(normalizeToLocation(location));
+        var method = replace || isDuplicateNavigation ? history.replace : history.push;
         method(location);
       }
     }); // React 15 compat
@@ -5194,7 +5409,7 @@ var Link = forwardRef(function (_ref2, forwardedRef) {
       props.innerRef = innerRef;
     }
 
-    return react.createElement(component, props);
+    return /*#__PURE__*/react.createElement(component, props);
   });
 });
 
@@ -5241,8 +5456,8 @@ var NavLink = forwardRef$1(function (_ref, forwardedRef) {
       innerRef = _ref.innerRef,
       rest = objectWithoutPropertiesLoose_objectWithoutPropertiesLoose(_ref, ["aria-current", "activeClassName", "activeStyle", "className", "exact", "isActive", "location", "sensitive", "strict", "style", "to", "innerRef"]);
 
-  return react.createElement(context.Consumer, null, function (context) {
-    !context ?  false ? 0 : tiny_invariant_esm(false) : void 0;
+  return /*#__PURE__*/react.createElement(context.Consumer, null, function (context) {
+    !context ?  false ? 0 : tiny_invariant_esm_invariant(false) : void 0;
     var currentLocation = locationProp || context.location;
     var toLocation = normalizeToLocation(resolveToLocation(to, currentLocation), currentLocation);
     var path = toLocation.pathname; // Regex taken from: https://github.com/pillarjs/path-to-regexp/blob/master/index.js#L202
@@ -5255,8 +5470,13 @@ var NavLink = forwardRef$1(function (_ref, forwardedRef) {
       strict: strict
     }) : null;
     var isActive = !!(isActiveProp ? isActiveProp(match, currentLocation) : match);
-    var className = isActive ? joinClassnames(classNameProp, activeClassName) : classNameProp;
-    var style = isActive ? extends_extends({}, styleProp, {}, activeStyle) : styleProp;
+    var className = typeof classNameProp === "function" ? classNameProp(isActive) : classNameProp;
+    var style = typeof styleProp === "function" ? styleProp(isActive) : styleProp;
+
+    if (isActive) {
+      className = joinClassnames(className, activeClassName);
+      style = extends_extends({}, style, activeStyle);
+    }
 
     var props = extends_extends({
       "aria-current": isActive && ariaCurrent || null,
@@ -5272,7 +5492,7 @@ var NavLink = forwardRef$1(function (_ref, forwardedRef) {
       props.innerRef = innerRef;
     }
 
-    return react.createElement(Link, props);
+    return /*#__PURE__*/react.createElement(Link, props);
   });
 });
 
@@ -5356,9 +5576,7 @@ function renderRoutes(routes, extraProps, switchProps) {
     document.head.appendChild($style);
     $style.innerHTML = "\n            #webtitle {\n\t\t\t\tmargin: 10px 90px;\n\t\t\t}\n            #loading {\n\t\t\t\tmargin: 10px 90px;\n\t\t\t}\n\n\t\t\tnav {\n\t\t\t\tdisplay: block;\n\t\t\t\tmargin-bottom: 50px;\n\t\t\t}\n\n\t\t\tnav ul {\n\t\t\t\tlist-style: none;\n\t\t\t}\n\n\t\t\tnav li {\n\t\t\t\tfloat: left;\n\t\t\t\tpadding: 1rem 2rem;\n\t\t\t}\n\n\t\t\tnav li a {\n\t\t\t\tcolor: #2075EF;\n\t\t\t\ttext-decoration: none;\n\t\t\t\tfont-size: 16px;\n\t\t\t\ttext-transform: uppercase;\n\t\t\t\tborder: 1px solid rgba(0, 0, 0, 0);\n\t\t\t\tpadding: 0.5rem 1rem;\n\t\t\t}\n\n\t\t\tnav li.active a {\n\t\t\t\tbackground: #F7F6F0;\n\t\t\t\tborder: 1px solid #EFE4E5;\n\t\t\t\tpadding: 0.5rem 1rem;\n\t\t\t}\n\n\t\t\tnav::after {\n\t\t\t\tcontent: \"\";\n\t\t\t\tdisplay: block;\n\t\t\t\tclear: both;\n\t\t\t}\n\n\t\t\t.content {\n\t\t\t\tdisplay: block;\n\t\t\t\tpadding: 15px;\n\t\t\t\tbackground: #F7F6F0;\n\t\t\t\tborder: 1px solid #EFE4E5;\n\t\t\t\tbox-shadow: 0px 10px 5px -12px rgb(0 0 0 / 21%);\n\t\t\t\tmargin: 10px 70px;\n\t\t\t\tborder-radius: 15px;\n\t\t\t}";
   });
-  return /*#__PURE__*/react.createElement(react.Fragment, null, /*#__PURE__*/react.createElement(HashRouter, null, /*#__PURE__*/react.createElement("h1", {
-    id: "webtitle"
-  }, "Uix Create React App"), /*#__PURE__*/react.createElement("nav", null, /*#__PURE__*/react.createElement("ul", null, /*#__PURE__*/react.createElement("li", {
+  return /*#__PURE__*/react.createElement(react.Fragment, null, /*#__PURE__*/react.createElement(HashRouter, null, /*#__PURE__*/react.createElement("nav", null, /*#__PURE__*/react.createElement("ul", null, /*#__PURE__*/react.createElement("li", {
     className: props.location.hash === '#/index' || props.location.hash === '#/' ? 'active' : ''
   }, /*#__PURE__*/react.createElement(Link, {
     to: "/index"
@@ -5395,36 +5613,120 @@ function renderRoutes(routes, extraProps, switchProps) {
     });
   }))));
 });
+;// CONCATENATED MODULE: ./node_modules/@babel/runtime/helpers/esm/objectWithoutProperties.js
+
+function _objectWithoutProperties(source, excluded) {
+  if (source == null) return {};
+  var target = objectWithoutPropertiesLoose_objectWithoutPropertiesLoose(source, excluded);
+  var key, i;
+
+  if (Object.getOwnPropertySymbols) {
+    var sourceSymbolKeys = Object.getOwnPropertySymbols(source);
+
+    for (i = 0; i < sourceSymbolKeys.length; i++) {
+      key = sourceSymbolKeys[i];
+      if (excluded.indexOf(key) >= 0) continue;
+      if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue;
+      target[key] = source[key];
+    }
+  }
+
+  return target;
+}
+;// CONCATENATED MODULE: ./node_modules/@babel/runtime/helpers/esm/classCallCheck.js
+function _classCallCheck(instance, Constructor) {
+  if (!(instance instanceof Constructor)) {
+    throw new TypeError("Cannot call a class as a function");
+  }
+}
+;// CONCATENATED MODULE: ./node_modules/@babel/runtime/helpers/esm/createClass.js
+function _defineProperties(target, props) {
+  for (var i = 0; i < props.length; i++) {
+    var descriptor = props[i];
+    descriptor.enumerable = descriptor.enumerable || false;
+    descriptor.configurable = true;
+    if ("value" in descriptor) descriptor.writable = true;
+    Object.defineProperty(target, descriptor.key, descriptor);
+  }
+}
+
+function _createClass(Constructor, protoProps, staticProps) {
+  if (protoProps) _defineProperties(Constructor.prototype, protoProps);
+  if (staticProps) _defineProperties(Constructor, staticProps);
+  Object.defineProperty(Constructor, "prototype", {
+    writable: false
+  });
+  return Constructor;
+}
+;// CONCATENATED MODULE: ./node_modules/@babel/runtime/helpers/esm/inherits.js
+
+function _inherits(subClass, superClass) {
+  if (typeof superClass !== "function" && superClass !== null) {
+    throw new TypeError("Super expression must either be null or a function");
+  }
+
+  subClass.prototype = Object.create(superClass && superClass.prototype, {
+    constructor: {
+      value: subClass,
+      writable: true,
+      configurable: true
+    }
+  });
+  Object.defineProperty(subClass, "prototype", {
+    writable: false
+  });
+  if (superClass) _setPrototypeOf(subClass, superClass);
+}
+;// CONCATENATED MODULE: ./node_modules/@babel/runtime/helpers/esm/typeof.js
+function _typeof(obj) {
+  "@babel/helpers - typeof";
+
+  return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) {
+    return typeof obj;
+  } : function (obj) {
+    return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+  }, _typeof(obj);
+}
+;// CONCATENATED MODULE: ./node_modules/@babel/runtime/helpers/esm/assertThisInitialized.js
+function _assertThisInitialized(self) {
+  if (self === void 0) {
+    throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+  }
+
+  return self;
+}
+;// CONCATENATED MODULE: ./node_modules/@babel/runtime/helpers/esm/possibleConstructorReturn.js
+
+
+function _possibleConstructorReturn(self, call) {
+  if (call && (_typeof(call) === "object" || typeof call === "function")) {
+    return call;
+  } else if (call !== void 0) {
+    throw new TypeError("Derived constructors may only return object or undefined");
+  }
+
+  return _assertThisInitialized(self);
+}
+;// CONCATENATED MODULE: ./node_modules/@babel/runtime/helpers/esm/getPrototypeOf.js
+function _getPrototypeOf(o) {
+  _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) {
+    return o.__proto__ || Object.getPrototypeOf(o);
+  };
+  return _getPrototypeOf(o);
+}
 ;// CONCATENATED MODULE: ./src/components/Buttons/index.tsx
-function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
-var _excluded = ["bgColor", "btnName"];
 
-function Buttons_extends() { Buttons_extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return Buttons_extends.apply(this, arguments); }
 
-function _objectWithoutProperties(source, excluded) { if (source == null) return {}; var target = Buttons_objectWithoutPropertiesLoose(source, excluded); var key, i; if (Object.getOwnPropertySymbols) { var sourceSymbolKeys = Object.getOwnPropertySymbols(source); for (i = 0; i < sourceSymbolKeys.length; i++) { key = sourceSymbolKeys[i]; if (excluded.indexOf(key) >= 0) continue; if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue; target[key] = source[key]; } } return target; }
 
-function Buttons_objectWithoutPropertiesLoose(source, excluded) { if (source == null) return {}; var target = {}; var sourceKeys = Object.keys(source); var key, i; for (i = 0; i < sourceKeys.length; i++) { key = sourceKeys[i]; if (excluded.indexOf(key) >= 0) continue; target[key] = source[key]; } return target; }
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
 
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) Buttons_setPrototypeOf(subClass, superClass); }
-
-function Buttons_setPrototypeOf(o, p) { Buttons_setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return Buttons_setPrototypeOf(o, p); }
+var _excluded = ["bgColor", "btnName", "href"];
 
 function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
 
-function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
-
-function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
-
 function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-
-function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
 
 /* 
  *************************************
@@ -5471,11 +5773,15 @@ var Button = /*#__PURE__*/function (_Component) {
       var _this$props = this.props,
           bgColor = _this$props.bgColor,
           btnName = _this$props.btnName,
+          href = _this$props.href,
           attributes = _objectWithoutProperties(_this$props, _excluded);
 
-      return /*#__PURE__*/react.createElement(react.Fragment, null, /*#__PURE__*/react.createElement("button", Buttons_extends({
+      return /*#__PURE__*/react.createElement(react.Fragment, null, href ? /*#__PURE__*/react.createElement("a", extends_extends({
+        style: styles[bgColor] || {},
+        href: href
+      }, attributes), btnName || 'Default') : /*#__PURE__*/react.createElement("button", extends_extends({
         type: "button",
-        style: styles[bgColor] || styles['info']
+        style: styles[bgColor] || {}
       }, attributes), btnName || 'Default'));
     }
   }]);
@@ -5497,21 +5803,16 @@ var spreadOperator = {
   staticContext.status = 200;
   return /*#__PURE__*/react.createElement(react.Fragment, null, /*#__PURE__*/react.createElement("div", {
     className: "content"
-  }, /*#__PURE__*/react.createElement("h1", null, "Home!"), /*#__PURE__*/react.createElement("h3", null, "Component Import:"), /*#__PURE__*/react.createElement(Button, {
+  }, /*#__PURE__*/react.createElement("p", null, "This repository is a full-stack sample web application based on ", /*#__PURE__*/react.createElement("strong", null, "React+TypeScript+Babel+Webpack+Jest"), " that creates a simple whole-website architecture, and provides the foundational services, components, and plumbing needed to get a basic web application up and running. "), /*#__PURE__*/react.createElement("h3", null, "Component Import:"), /*#__PURE__*/react.createElement(Button, {
     bgColor: "",
-    btnName: ""
+    btnName: "",
+    href: "#"
   }), /*#__PURE__*/react.createElement(Button, {
     bgColor: "success",
     btnName: "success"
   }), /*#__PURE__*/react.createElement(Button, {
     bgColor: "info",
     btnName: "info"
-  }), /*#__PURE__*/react.createElement(Button, {
-    bgColor: "danger",
-    btnName: "danger"
-  }), /*#__PURE__*/react.createElement(Button, {
-    bgColor: "warning",
-    btnName: "warning"
   }), /*#__PURE__*/react.createElement(Button, spreadOperator)));
 });
 // EXTERNAL MODULE: ./node_modules/axios/index.js
@@ -5563,43 +5864,30 @@ var axios_default = /*#__PURE__*/__webpack_require__.n(axios);
   }, name))));
 });
 ;// CONCATENATED MODULE: ./src/views/_pages/Posts/index.js
-function Posts_typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { Posts_typeof = function _typeof(obj) { return typeof obj; }; } else { Posts_typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return Posts_typeof(obj); }
 
-function Posts_extends() { Posts_extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return Posts_extends.apply(this, arguments); }
 
-function Posts_classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-function Posts_defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
 
-function Posts_createClass(Constructor, protoProps, staticProps) { if (protoProps) Posts_defineProperties(Constructor.prototype, protoProps); if (staticProps) Posts_defineProperties(Constructor, staticProps); return Constructor; }
 
-function Posts_inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) Posts_setPrototypeOf(subClass, superClass); }
 
-function Posts_setPrototypeOf(o, p) { Posts_setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return Posts_setPrototypeOf(o, p); }
 
-function Posts_createSuper(Derived) { var hasNativeReflectConstruct = Posts_isNativeReflectConstruct(); return function _createSuperInternal() { var Super = Posts_getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = Posts_getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return Posts_possibleConstructorReturn(this, result); }; }
-
-function Posts_possibleConstructorReturn(self, call) { if (call && (Posts_typeof(call) === "object" || typeof call === "function")) { return call; } return Posts_assertThisInitialized(self); }
-
-function Posts_assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
+function Posts_createSuper(Derived) { var hasNativeReflectConstruct = Posts_isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
 
 function Posts_isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-
-function Posts_getPrototypeOf(o) { Posts_getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return Posts_getPrototypeOf(o); }
 
 
 
 
 
 var Posts = /*#__PURE__*/function (_Component) {
-  Posts_inherits(Posts, _Component);
+  _inherits(Posts, _Component);
 
   var _super = Posts_createSuper(Posts);
 
   function Posts(props) {
     var _this;
 
-    Posts_classCallCheck(this, Posts);
+    _classCallCheck(this, Posts);
 
     //You are extending the React.Component class, and per the ES2015 spec, 
     //a child class constructor cannot make use of this until super() has 
@@ -5614,7 +5902,7 @@ var Posts = /*#__PURE__*/function (_Component) {
     return _this;
   }
 
-  Posts_createClass(Posts, [{
+  _createClass(Posts, [{
     key: "fetchPosts",
     value: function fetchPosts() {
       var self = this; // Request data
@@ -5681,7 +5969,7 @@ var Posts = /*#__PURE__*/function (_Component) {
       return /*#__PURE__*/react.createElement(react.Fragment, null, /*#__PURE__*/react.createElement("div", {
         className: "content"
       }, isLoaded ? postsData != null ? postsData.map(function (item, i) {
-        return /*#__PURE__*/react.createElement(PostItem, Posts_extends({
+        return /*#__PURE__*/react.createElement(PostItem, extends_extends({
           key: i
         }, item));
       }) : "" : /*#__PURE__*/react.createElement("div", {
@@ -5695,40 +5983,28 @@ var Posts = /*#__PURE__*/function (_Component) {
 
 /* harmony default export */ const _pages_Posts = (Posts);
 ;// CONCATENATED MODULE: ./src/views/_pages/Posts/PostDetail.js
-function PostDetail_typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { PostDetail_typeof = function _typeof(obj) { return typeof obj; }; } else { PostDetail_typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return PostDetail_typeof(obj); }
 
-function PostDetail_classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-function PostDetail_defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
 
-function PostDetail_createClass(Constructor, protoProps, staticProps) { if (protoProps) PostDetail_defineProperties(Constructor.prototype, protoProps); if (staticProps) PostDetail_defineProperties(Constructor, staticProps); return Constructor; }
 
-function PostDetail_inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) PostDetail_setPrototypeOf(subClass, superClass); }
 
-function PostDetail_setPrototypeOf(o, p) { PostDetail_setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return PostDetail_setPrototypeOf(o, p); }
 
-function PostDetail_createSuper(Derived) { var hasNativeReflectConstruct = PostDetail_isNativeReflectConstruct(); return function _createSuperInternal() { var Super = PostDetail_getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = PostDetail_getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return PostDetail_possibleConstructorReturn(this, result); }; }
-
-function PostDetail_possibleConstructorReturn(self, call) { if (call && (PostDetail_typeof(call) === "object" || typeof call === "function")) { return call; } return PostDetail_assertThisInitialized(self); }
-
-function PostDetail_assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
+function PostDetail_createSuper(Derived) { var hasNativeReflectConstruct = PostDetail_isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
 
 function PostDetail_isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-
-function PostDetail_getPrototypeOf(o) { PostDetail_getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return PostDetail_getPrototypeOf(o); }
 
 
 
 
 var PostDetail = /*#__PURE__*/function (_Component) {
-  PostDetail_inherits(PostDetail, _Component);
+  _inherits(PostDetail, _Component);
 
   var _super = PostDetail_createSuper(PostDetail);
 
   function PostDetail(props) {
     var _this;
 
-    PostDetail_classCallCheck(this, PostDetail);
+    _classCallCheck(this, PostDetail);
 
     //You are extending the React.Component class, and per the ES2015 spec, 
     //a child class constructor cannot make use of this until super() has 
@@ -5743,7 +6019,7 @@ var PostDetail = /*#__PURE__*/function (_Component) {
     return _this;
   }
 
-  PostDetail_createClass(PostDetail, [{
+  _createClass(PostDetail, [{
     key: "fetchPostDetail",
     value: function fetchPostDetail() {
       var self = this; //get vars
@@ -5847,27 +6123,16 @@ var PostDetail = /*#__PURE__*/function (_Component) {
 
 /* harmony default export */ const Posts_PostDetail = (PostDetail);
 ;// CONCATENATED MODULE: ./src/views/_pages/Todos/LoginPage.js
-function LoginPage_typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { LoginPage_typeof = function _typeof(obj) { return typeof obj; }; } else { LoginPage_typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return LoginPage_typeof(obj); }
 
-function LoginPage_classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-function LoginPage_defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
 
-function LoginPage_createClass(Constructor, protoProps, staticProps) { if (protoProps) LoginPage_defineProperties(Constructor.prototype, protoProps); if (staticProps) LoginPage_defineProperties(Constructor, staticProps); return Constructor; }
 
-function LoginPage_inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) LoginPage_setPrototypeOf(subClass, superClass); }
 
-function LoginPage_setPrototypeOf(o, p) { LoginPage_setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return LoginPage_setPrototypeOf(o, p); }
 
-function LoginPage_createSuper(Derived) { var hasNativeReflectConstruct = LoginPage_isNativeReflectConstruct(); return function _createSuperInternal() { var Super = LoginPage_getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = LoginPage_getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return LoginPage_possibleConstructorReturn(this, result); }; }
 
-function LoginPage_possibleConstructorReturn(self, call) { if (call && (LoginPage_typeof(call) === "object" || typeof call === "function")) { return call; } return LoginPage_assertThisInitialized(self); }
-
-function LoginPage_assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
+function LoginPage_createSuper(Derived) { var hasNativeReflectConstruct = LoginPage_isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
 
 function LoginPage_isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-
-function LoginPage_getPrototypeOf(o) { LoginPage_getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return LoginPage_getPrototypeOf(o); }
 
 
 
@@ -5883,14 +6148,14 @@ var Welcome = function Welcome(_ref) {
 };
 
 var LoginPage = /*#__PURE__*/function (_Component) {
-  LoginPage_inherits(LoginPage, _Component);
+  _inherits(LoginPage, _Component);
 
   var _super = LoginPage_createSuper(LoginPage);
 
   function LoginPage() {
     var _this;
 
-    LoginPage_classCallCheck(this, LoginPage);
+    _classCallCheck(this, LoginPage);
 
     _this = _super.call(this);
     _this.state = {
@@ -5899,14 +6164,14 @@ var LoginPage = /*#__PURE__*/function (_Component) {
       password: '',
       error: ''
     };
-    _this.handlePassChange = _this.handlePassChange.bind(LoginPage_assertThisInitialized(_this));
-    _this.handleUserChange = _this.handleUserChange.bind(LoginPage_assertThisInitialized(_this));
-    _this.handleSubmit = _this.handleSubmit.bind(LoginPage_assertThisInitialized(_this));
-    _this.dismissError = _this.dismissError.bind(LoginPage_assertThisInitialized(_this));
+    _this.handlePassChange = _this.handlePassChange.bind(_assertThisInitialized(_this));
+    _this.handleUserChange = _this.handleUserChange.bind(_assertThisInitialized(_this));
+    _this.handleSubmit = _this.handleSubmit.bind(_assertThisInitialized(_this));
+    _this.dismissError = _this.dismissError.bind(_assertThisInitialized(_this));
     return _this;
   }
 
-  LoginPage_createClass(LoginPage, [{
+  _createClass(LoginPage, [{
     key: "dismissError",
     value: function dismissError() {
       this.setState({
@@ -6115,38 +6380,26 @@ var LoginPage = /*#__PURE__*/function (_Component) {
 
 /* harmony default export */ const Todos_LoginPage = (LoginPage);
 ;// CONCATENATED MODULE: ./src/views/_pages/Todos/index.js
-function Todos_typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { Todos_typeof = function _typeof(obj) { return typeof obj; }; } else { Todos_typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return Todos_typeof(obj); }
 
-function Todos_classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-function Todos_defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
 
-function Todos_createClass(Constructor, protoProps, staticProps) { if (protoProps) Todos_defineProperties(Constructor.prototype, protoProps); if (staticProps) Todos_defineProperties(Constructor, staticProps); return Constructor; }
 
-function Todos_inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) Todos_setPrototypeOf(subClass, superClass); }
 
-function Todos_setPrototypeOf(o, p) { Todos_setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return Todos_setPrototypeOf(o, p); }
 
-function Todos_createSuper(Derived) { var hasNativeReflectConstruct = Todos_isNativeReflectConstruct(); return function _createSuperInternal() { var Super = Todos_getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = Todos_getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return Todos_possibleConstructorReturn(this, result); }; }
-
-function Todos_possibleConstructorReturn(self, call) { if (call && (Todos_typeof(call) === "object" || typeof call === "function")) { return call; } return Todos_assertThisInitialized(self); }
-
-function Todos_assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
+function Todos_createSuper(Derived) { var hasNativeReflectConstruct = Todos_isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
 
 function Todos_isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-
-function Todos_getPrototypeOf(o) { Todos_getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return Todos_getPrototypeOf(o); }
 
 
 
 
 var Todos = /*#__PURE__*/function (_Component) {
-  Todos_inherits(Todos, _Component);
+  _inherits(Todos, _Component);
 
   var _super = Todos_createSuper(Todos);
 
   function Todos(props) {
-    Todos_classCallCheck(this, Todos);
+    _classCallCheck(this, Todos);
 
     //You are extending the React.Component class, and per the ES2015 spec, 
     //a child class constructor cannot make use of this until super() has 
@@ -6163,7 +6416,7 @@ var Todos = /*#__PURE__*/function (_Component) {
    */
 
 
-  Todos_createClass(Todos, [{
+  _createClass(Todos, [{
     key: "componentDidMount",
     value: function componentDidMount() {//do shmething
     }
@@ -6181,27 +6434,15 @@ var Todos = /*#__PURE__*/function (_Component) {
 
 /* harmony default export */ const _pages_Todos = (Todos);
 ;// CONCATENATED MODULE: ./src/views/_pages/NestedRoutes/NestedRoutesDetail.js
-function NestedRoutesDetail_typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { NestedRoutesDetail_typeof = function _typeof(obj) { return typeof obj; }; } else { NestedRoutesDetail_typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return NestedRoutesDetail_typeof(obj); }
 
-function NestedRoutesDetail_classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-function NestedRoutesDetail_defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
 
-function NestedRoutesDetail_createClass(Constructor, protoProps, staticProps) { if (protoProps) NestedRoutesDetail_defineProperties(Constructor.prototype, protoProps); if (staticProps) NestedRoutesDetail_defineProperties(Constructor, staticProps); return Constructor; }
 
-function NestedRoutesDetail_inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) NestedRoutesDetail_setPrototypeOf(subClass, superClass); }
 
-function NestedRoutesDetail_setPrototypeOf(o, p) { NestedRoutesDetail_setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return NestedRoutesDetail_setPrototypeOf(o, p); }
 
-function NestedRoutesDetail_createSuper(Derived) { var hasNativeReflectConstruct = NestedRoutesDetail_isNativeReflectConstruct(); return function _createSuperInternal() { var Super = NestedRoutesDetail_getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = NestedRoutesDetail_getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return NestedRoutesDetail_possibleConstructorReturn(this, result); }; }
-
-function NestedRoutesDetail_possibleConstructorReturn(self, call) { if (call && (NestedRoutesDetail_typeof(call) === "object" || typeof call === "function")) { return call; } return NestedRoutesDetail_assertThisInitialized(self); }
-
-function NestedRoutesDetail_assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
+function NestedRoutesDetail_createSuper(Derived) { var hasNativeReflectConstruct = NestedRoutesDetail_isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
 
 function NestedRoutesDetail_isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-
-function NestedRoutesDetail_getPrototypeOf(o) { NestedRoutesDetail_getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return NestedRoutesDetail_getPrototypeOf(o); }
 
 
  //Might have mismatching versions of React and the renderer (such as React DOM)
@@ -6235,17 +6476,17 @@ function HookTopicId() {
 
 
 var NestedRoutesDetail = /*#__PURE__*/function (_Component) {
-  NestedRoutesDetail_inherits(NestedRoutesDetail, _Component);
+  _inherits(NestedRoutesDetail, _Component);
 
   var _super = NestedRoutesDetail_createSuper(NestedRoutesDetail);
 
   function NestedRoutesDetail() {
-    NestedRoutesDetail_classCallCheck(this, NestedRoutesDetail);
+    _classCallCheck(this, NestedRoutesDetail);
 
     return _super.apply(this, arguments);
   }
 
-  NestedRoutesDetail_createClass(NestedRoutesDetail, [{
+  _createClass(NestedRoutesDetail, [{
     key: "render",
     value: function render() {
       return /*#__PURE__*/react.createElement(react.Fragment, null, /*#__PURE__*/react.createElement(HookScript, null), /*#__PURE__*/react.createElement("p", null, "Detail topicId: ", /*#__PURE__*/react.createElement("span", {
@@ -6262,27 +6503,15 @@ var NestedRoutesDetail = /*#__PURE__*/function (_Component) {
 
 /* harmony default export */ const NestedRoutes_NestedRoutesDetail = (NestedRoutesDetail);
 ;// CONCATENATED MODULE: ./src/views/_pages/NestedRoutes/index.js
-function NestedRoutes_typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { NestedRoutes_typeof = function _typeof(obj) { return typeof obj; }; } else { NestedRoutes_typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return NestedRoutes_typeof(obj); }
 
-function NestedRoutes_classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-function NestedRoutes_defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
 
-function NestedRoutes_createClass(Constructor, protoProps, staticProps) { if (protoProps) NestedRoutes_defineProperties(Constructor.prototype, protoProps); if (staticProps) NestedRoutes_defineProperties(Constructor, staticProps); return Constructor; }
 
-function NestedRoutes_inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) NestedRoutes_setPrototypeOf(subClass, superClass); }
 
-function NestedRoutes_setPrototypeOf(o, p) { NestedRoutes_setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return NestedRoutes_setPrototypeOf(o, p); }
 
-function NestedRoutes_createSuper(Derived) { var hasNativeReflectConstruct = NestedRoutes_isNativeReflectConstruct(); return function _createSuperInternal() { var Super = NestedRoutes_getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = NestedRoutes_getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return NestedRoutes_possibleConstructorReturn(this, result); }; }
-
-function NestedRoutes_possibleConstructorReturn(self, call) { if (call && (NestedRoutes_typeof(call) === "object" || typeof call === "function")) { return call; } return NestedRoutes_assertThisInitialized(self); }
-
-function NestedRoutes_assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
+function NestedRoutes_createSuper(Derived) { var hasNativeReflectConstruct = NestedRoutes_isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
 
 function NestedRoutes_isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-
-function NestedRoutes_getPrototypeOf(o) { NestedRoutes_getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return NestedRoutes_getPrototypeOf(o); }
 
 
 
@@ -6311,17 +6540,17 @@ function HookContent() {
 }
 
 var NestedRoutes = /*#__PURE__*/function (_Component) {
-  NestedRoutes_inherits(NestedRoutes, _Component);
+  _inherits(NestedRoutes, _Component);
 
   var _super = NestedRoutes_createSuper(NestedRoutes);
 
   function NestedRoutes() {
-    NestedRoutes_classCallCheck(this, NestedRoutes);
+    _classCallCheck(this, NestedRoutes);
 
     return _super.apply(this, arguments);
   }
 
-  NestedRoutes_createClass(NestedRoutes, [{
+  _createClass(NestedRoutes, [{
     key: "render",
     value: function render() {
       return /*#__PURE__*/react.createElement(react.Fragment, null, /*#__PURE__*/react.createElement("div", {

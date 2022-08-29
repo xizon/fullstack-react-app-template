@@ -7,7 +7,7 @@ import {
 	useParams
 } from 'react-router-dom';
 
-import NestedRoutesDetail from '@react.app/pages/NestedRoutes/NestedRoutesDetail.js';
+import NestedRoutesDetail from '@/pages/NestedRoutes/NestedRoutesDetail.js';
 
 
 

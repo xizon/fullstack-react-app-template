@@ -1,7 +1,6 @@
 'use strict';
 
 const webpack                    = require('webpack');
-const express                    = require('express');
 const fs                         = require('fs');
 const path                       = require('path');
 const TerserPlugin               = require("terser-webpack-plugin");
@@ -75,7 +74,7 @@ let customWebsiteVersion     = json.version,
 	customWebsiteAuthor      = ( Object.prototype.toString.call( json.author ) == '[object Object]' ) ? json.author.name : json.author,
 	customWebsiteTitle       = json.projectName,
 	customWebsiteDesc        = json.description,
-	customWebsiteGenerator   = 'Uix Create React App',
+	customWebsiteGenerator   = 'Full-Stack React Application Template',
 	customWebsiteHash        = randomString({length: 20}),
 	customWebsiteComment     = `
 DO NOT OVERRIDE THIS FILE.
@@ -85,7 +84,7 @@ Generated with "npm run build"
 ## Project Description :  ` + customWebsiteDesc + `
 ## Project URL         :  ` + json.projectURL + `
 ## Version             :  ` + customWebsiteVersion + `
-## Based on            :  Uix Create React App (` + json.homepage + `)
+## Based on            :  Full-Stack React Application Template (` + json.homepage + `)
 ## Last Update         :  ` + moment().format( "MMMM D, YYYY" ) + `
 ## Created by          :  ` + json.createdInfo + ( json.email != '' ? ' (' + json.email + ')' : '' ) + `
 ## Released under the ` + json.license + ` license.
@@ -236,10 +235,10 @@ const webpackConfig = {
 			// 2) `tsconfig.json`      --> "compilerOptions": { "paths": {...} }
 			// 3) `package.json`       --> "jest": { "moduleNameMapper": {...} }
 			
-			'@react.app/components': path.resolve(__dirname, alias.pathComponents ),
-			'@react.app/plugins': path.resolve(__dirname, alias.pathThirdPartyPlugins ),
-			'@react.app/router': path.resolve(__dirname, alias.pathRouter ),
-			'@react.app/pages': path.resolve(__dirname, alias.pathPages )
+			'@/components': path.resolve(__dirname, alias.pathComponents ),
+			'@/plugins': path.resolve(__dirname, alias.pathThirdPartyPlugins ),
+			'@/router': path.resolve(__dirname, alias.pathRouter ),
+			'@/pages': path.resolve(__dirname, alias.pathPages )
 			
 		}
     },
@@ -300,9 +299,10 @@ const webpackConfig = {
                 ]
             },
 			{
-				test: /\.json$/,
-				use: 'json-loader'
-			},
+                test: /\.json$/,
+                exclude: path.resolve(__dirname, './node_modules'),
+                loader: "json-loader"       
+            },
             {
                 test: /\.(js|jsx|ts|tsx)$/,
                 loader: 'babel-loader',
@@ -496,10 +496,7 @@ webpackConfig.plugins.push(
  *************************************
  */
 const compiler = webpack( webpackConfig );
-const app = express();
 const instance = webpackDevMiddleware( compiler );
-app.use( instance );
-
 
 //Watch for Files Changes in Node.js
 require('log-timestamp');

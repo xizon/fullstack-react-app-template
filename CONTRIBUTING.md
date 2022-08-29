@@ -1,4 +1,4 @@
-# Contributing to Uix Create React App
+# Contributing to Full-Stack React Application Template
 
 Hi, there!
 
@@ -15,11 +15,10 @@ Hi, there!
 <a name="res"></a>
 ## Resources
 
-Uix Create React App bundles the following third-party resources:
+Full-Stack React Application Template bundles the following third-party resources:
 
 - [React](https://reactjs.org/)
 - [Babel](https://babeljs.io/)
-- [React Router](https://reacttraining.com/react-router/web/guides/quick-start/)
 - [axios](https://github.com/axios/axios)
 
 

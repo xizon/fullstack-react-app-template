@@ -1,15 +1,15 @@
-# @react.app/components/Buttons
+# @/components/Buttons
 
 ![MIT license](https://badgen.now.sh/badge/license/MIT)
 
-[Source](https://github.com/xizon/uix-create-react-app/tree/main/src/components/Buttons)
+[Source](https://github.com/xizon/fullstack-react-app-template/tree/main/src/components/Buttons)
 
 
 ## Examples
 
 ```js
 import React from 'react';
-import Button from '@react.app/components/Buttons';
+import Button from '@/components/Buttons';
 
 let spreadOperator = {
   bgColor: 'info',

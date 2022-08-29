@@ -1,14 +1,11 @@
-# Uix Create React App
+# Full-Stack React Application Template
 
-
-[![Travis CI](https://img.shields.io/travis/com/xizon/uix-create-react-app?style=for-the-badge)](https://travis-ci.com/xizon/uix-create-react-app/)
-[![npm version](https://img.shields.io/npm/v/uix-create-react-app?style=for-the-badge)](https://www.npmjs.com/package/uix-create-react-app)
-[![license](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=for-the-badge)](LICENSE)
+ This repository is a full-stack sample web application based on React+TypeScript+Babel+Webpack+Jest that creates a simple whole-website architecture, and provides the foundational services, components, and plumbing needed to get a basic web application up and running. 
 
 
 ## Demo
 
-[https://xizon.github.io/uix-create-react-app/examples/](https://xizon.github.io/uix-create-react-app/examples/)
+[https://xizon.github.io/fullstack-react-app-template/examples/](https://xizon.github.io/fullstack-react-app-template/examples/)
 
 
 
@@ -24,13 +21,6 @@
 
 
 
-## Description
-
-A set of React tool and scaffold. 
-
-**Access your application without a server.**
-
-
 * * *
 
 
@@ -39,23 +29,23 @@ A set of React tool and scaffold.
 You will need to have [node](https://nodejs.org/) setup on your machine. That will output the built distributables to `./dist/*` and `./examples/*.html`.
 
 
-**Step 1.** Use NPM (Locate your current directory of project, and enter the following command.) or download the latest version from [Github](https://github.com/xizon/uix-create-react-app). For nodejs you have to install some dependencies.
+**Step 1.** Use NPM (Locate your current directory of project, and enter the following command.) or download the latest version from [Github](https://github.com/xizon/fullstack-react-app-template). For nodejs you have to install some dependencies.
 
 ```sh
-$ sudo npm install uix-create-react-app
+$ sudo npm install fullstack-react-app-template
 ```
 
 Or clone the repo to get all source files including build scripts: 
 
 ```sh
-$ git clone git://github.com/xizon/uix-create-react-app.git
+$ git clone git://github.com/xizon/fullstack-react-app-template.git
 ```
 
 
-**Step 2.** First, using an absolute path into your `"uix-create-react-app/"` folder directory.
+**Step 2.** First, using an absolute path into your `"fullstack-react-app-template/"` folder directory.
 
 ```sh
-$ cd /{your_directory}/uix-create-react-app
+$ cd /{your_directory}/fullstack-react-app-template
 ```
 
 
@@ -149,13 +139,13 @@ You can update the Placeholders in Templates by modifying the Site Info configur
 ```json
 {
   "author": "UIUX Lab",
-  "name": "uix-create-react-app",
+  "name": "fullstack-react-app-template",
   "email": "uiuxlab@gmail.com",
   "version": "1.0.0",
-  "projectName": "Uix Create React App",
+  "projectName": "Full-Stack React Application Template",
   "createdInfo": "UIUX Lab (https://uiux.cc)",
   "projectURL": "https://uiux.cc",
-  "description": "A set of React tool and scaffold.",
+  "description": "This repository is a full-stack sample web application based on React+TypeScript+Babel+Webpack+Jest that creates a simple whole-website architecture.",
   ...
 }
 ```
@@ -180,7 +170,7 @@ The application loads some third-party libraries (icons, animations, 3D engines,
 
 ```sh
 
-uix-create-react-app/
+fullstack-react-app-template/
 ├── README.md
 ├── CHANGELOG.md
 ├── CONTRIBUTING.md

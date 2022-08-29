@@ -1,12 +1,12 @@
 {
   "author": "UIUX Lab",
   "email": "uiuxlab@gmail.com",
-  "name": "uix-create-react-app",
-  "projectName": "Uix Create React App",
+  "name": "fullstack-react-app-template",
+  "projectName": "Full-Stack React Application Template",
   "createdInfo": "UIUX Lab (https://uiux.cc)",
   "projectURL": "https://uiux.cc",
   "version": "0.0.12",
-  "description": "A set of React tool and scaffold.",
+  "description": "This repository is a full-stack sample web application based on React+TypeScript+Babel+Webpack+Jest that creates a simple whole-website architecture.",
   "main": "webpack.config.js",
   "directories": {
     "example": "examples",
@@ -16,10 +16,10 @@
     "testEnvironment": "jsdom",
     "moduleNameMapper": {
       "\\.(css|less|scss|sass)$": "identity-obj-proxy",
-      "^@react.app/components/(.*)": "<rootDir>/src/components/$1",
-      "^@react.app/plugins/(.*)": "<rootDir>/src/components/_plugins/$1",
-      "^@react.app/router/(.*)": "<rootDir>/src/router/$1",
-      "^@react.app/pages/(.*)": "<rootDir>/src/views/_pages/$1"
+      "^@/components/(.*)": "<rootDir>/src/components/$1",
+      "^@/plugins/(.*)": "<rootDir>/src/components/_plugins/$1",
+      "^@/router/(.*)": "<rootDir>/src/router/$1",
+      "^@/pages/(.*)": "<rootDir>/src/views/_pages/$1"
     },
     "transform": {
       "^.+\\.(js|jsx)$": "babel-jest",
@@ -37,23 +37,22 @@
   },
   "repository": {
     "type": "git",
-    "url": "uix-create-react-app"
+    "url": "fullstack-react-app-template"
   },
   "keywords": [
-    "web",
     "react",
-    "app",
     "typescript",
-    "ui",
     "front-end",
-    "webdesign",
-    "scaffold"
+    "scaffold",
+    "template",
+    "webpack",
+    "jest"
   ],
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/xizon/uix-create-react-app/issues"
+    "url": "https://github.com/xizon/fullstack-react-app-template/issues"
   },
-  "homepage": "https://github.com/xizon/uix-create-react-app#readme",
+  "homepage": "https://github.com/xizon/fullstack-react-app-template#readme",
   "devDependencies": {
     "@babel/core": "^7.13.14",
     "@babel/plugin-proposal-class-properties": "^7.2.3",
@@ -116,7 +115,9 @@
     "webpack-dev-server": "^3.11.2"
   },
   "dependencies": {
+    "@babel/plugin-transform-runtime": "^7.18.10",
     "axios": "^0.21.1",
+    "babel-plugin-module-resolver": "^4.1.0",
     "moment": "^2.23.0",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",

@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import axios from 'axios';
-import PostItem from '@react.app/pages/Posts/PostItem.js';
+import PostItem from '@/pages/Posts/PostItem.js';
 
 
 class Posts extends Component {

@@ -7,7 +7,7 @@
  
  
  /*-- Apply this component styles --*/
- import '@react.app/components/Buttons/styles/index.scss';
+ import '@/components/Buttons/styles/index.scss';
  
  
  interface ButtonStylesConfig {
@@ -26,11 +26,11 @@
 }
 
 
- type ButtonProps = {
+interface ButtonProps extends React.ComponentPropsWithoutRef<any> {
    bgColor?: string;
    btnName?: string;
-   attributes?: any;
- };
+   href?: string;
+ }
  type ButtonState = false;
  
  
@@ -67,6 +67,7 @@ export default class Button extends Component<ButtonProps, ButtonState> {
     const {
       bgColor,
       btnName,
+      href,
       ...attributes
     } = this.props;
 
@@ -74,11 +75,15 @@ export default class Button extends Component<ButtonProps, ButtonState> {
     return (
       <>
 
-        <button type='button' style={styles[bgColor!] || styles['info']} {...attributes}>
+      {href ? (
+        <a style={styles[bgColor!] || {}} href={href} {...attributes}>
+          {btnName || 'Default'}
+        </a>        
+      ) : (
+        <button type="button" style={styles[bgColor!] || {}} {...attributes}>
           {btnName || 'Default'}
         </button>
-
-
+      )}	
 
       </>
     )

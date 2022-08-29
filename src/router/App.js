@@ -7,7 +7,7 @@ import {
 	Redirect,
 	useLocation
 } from 'react-router-dom';
-import customRoutesConfig from '@react.app/router/RoutesConfig.js';
+import customRoutesConfig from '@/router/RoutesConfig.js';
 
 
 export default (props) => {
@@ -81,9 +81,7 @@ export default (props) => {
 	  <>
 		
 		<HashRouter>
-		
-		  <h1 id="webtitle">Uix Create React App</h1>
-		
+	
 		  <nav>
 			  <ul>
 				<li className={props.location.hash === '#/index' || props.location.hash === '#/' ? 'active' : ''}>

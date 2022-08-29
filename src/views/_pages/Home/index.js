@@ -1,5 +1,5 @@
 import React from 'react';
-import Button from '@react.app/components/Buttons';
+import Button from '@/components/Buttons';
 
 
 let spreadOperator = {
@@ -16,14 +16,12 @@ export default ({ staticContext = {} }) => {
 	  <>
 		
             <div className="content">
-                <h1>Home!</h1>
+            <p>This repository is a full-stack sample web application based on <strong>React+TypeScript+Babel+Webpack+Jest</strong> that creates a simple whole-website architecture, and provides the foundational services, components, and plumbing needed to get a basic web application up and running. </p>
 		
 		        <h3>Component Import:</h3>
-            <Button bgColor='' btnName=''/>
+            <Button bgColor='' btnName='' href="#"/>
             <Button bgColor='success' btnName='success'/>
             <Button bgColor='info' btnName='info'/>
-            <Button bgColor='danger' btnName='danger'/>
-            <Button bgColor='warning' btnName='warning'/>
             <Button {...spreadOperator}/>
 		
 		

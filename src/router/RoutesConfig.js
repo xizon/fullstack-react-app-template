@@ -1,11 +1,11 @@
-import App from '@react.app/router/App.js';
+import App from '@/router/App.js';
 //
-import Home from '@react.app/pages/Home';
-import Posts from '@react.app/pages/Posts';
-import PostDetail from '@react.app/pages/Posts/PostDetail.js';
-import Todos from '@react.app/pages/Todos';
-import NestedRoutes from '@react.app/pages/NestedRoutes';
-import NoMatch from '@react.app/pages/404';
+import Home from '@/pages/Home';
+import Posts from '@/pages/Posts';
+import PostDetail from '@/pages/Posts/PostDetail.js';
+import Todos from '@/pages/Todos';
+import NestedRoutes from '@/pages/NestedRoutes';
+import NoMatch from '@/pages/404';
 
 
 const routesConfig = [

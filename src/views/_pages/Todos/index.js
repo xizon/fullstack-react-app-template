@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import LoginPage from '@react.app/pages/Todos/LoginPage.js';
+import LoginPage from '@/pages/Todos/LoginPage.js';
 
 
 class Todos extends Component {
